@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Star, Download, Github, ExternalLink, Sparkles } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, Download, Github, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,100 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { toolService, ToolSearchParams } from '@/lib/services/toolService';
+import { Tool } from '@/lib/types/api';
+import { useApi } from '@/lib/hooks/useApi';
 import Link from 'next/link';
-
-const tools = [
-  {
-    id: 1,
-    name: 'Docker',
-    description: 'Platform for developing, shipping, and running applications using containerization',
-    category: 'DevOps',
-    stars: 68900,
-    downloads: '10B+',
-    license: 'Apache 2.0',
-    lastUpdated: '2024-01-15',
-    tags: ['containerization', 'deployment', 'microservices', 'virtualization'],
-    verified: true,
-    aiScore: 95,
-    compatibility: ['Linux', 'Windows', 'macOS'],
-    deploymentReady: true
-  },
-  {
-    id: 2,
-    name: 'Kubernetes',
-    description: 'Production-Grade Container Orchestration system for automating deployment, scaling, and management',
-    category: 'DevOps',
-    stars: 108000,
-    downloads: '1B+',
-    license: 'Apache 2.0',
-    lastUpdated: '2024-01-20',
-    tags: ['orchestration', 'scaling', 'cloud-native', 'containers'],
-    verified: true,
-    aiScore: 98,
-    compatibility: ['Linux', 'Windows', 'macOS'],
-    deploymentReady: true
-  },
-  {
-    id: 3,
-    name: 'TensorFlow',
-    description: 'End-to-end open source platform for machine learning with comprehensive ecosystem',
-    category: 'AI/ML',
-    stars: 185000,
-    downloads: '50M+',
-    license: 'Apache 2.0',
-    lastUpdated: '2024-01-18',
-    tags: ['machine-learning', 'neural-networks', 'deep-learning', 'python'],
-    verified: true,
-    aiScore: 97,
-    compatibility: ['Linux', 'Windows', 'macOS'],
-    deploymentReady: true
-  },
-  {
-    id: 4,
-    name: 'Prometheus',
-    description: 'Monitoring system and time series database with powerful alerting capabilities',
-    category: 'Monitoring',
-    stars: 54700,
-    downloads: '100M+',
-    license: 'Apache 2.0',
-    lastUpdated: '2024-01-12',
-    tags: ['monitoring', 'alerting', 'time-series', 'metrics'],
-    verified: true,
-    aiScore: 92,
-    compatibility: ['Linux', 'Windows', 'macOS'],
-    deploymentReady: true
-  },
-  {
-    id: 5,
-    name: 'React',
-    description: 'JavaScript library for building user interfaces with component-based architecture',
-    category: 'Frontend',
-    stars: 225000,
-    downloads: '20M+',
-    license: 'MIT',
-    lastUpdated: '2024-01-22',
-    tags: ['javascript', 'frontend', 'ui', 'components'],
-    verified: true,
-    aiScore: 96,
-    compatibility: ['Web'],
-    deploymentReady: true
-  },
-  {
-    id: 6,
-    name: 'PostgreSQL',
-    description: 'Advanced open source relational database with SQL compliance and extensibility',
-    category: 'Database',
-    stars: 15800,
-    downloads: '500M+',
-    license: 'PostgreSQL',
-    lastUpdated: '2024-01-14',
-    tags: ['database', 'sql', 'relational', 'acid'],
-    verified: true,
-    aiScore: 94,
-    compatibility: ['Linux', 'Windows', 'macOS'],
-    deploymentReady: true
-  }
-];
 
 const categories = ['All', 'DevOps', 'AI/ML', 'Frontend', 'Backend', 'Database', 'Security', 'Monitoring'];
 const licenses = ['All', 'MIT', 'Apache 2.0', 'GPL', 'BSD', 'Other'];
@@ -113,46 +23,39 @@ export default function SearchPage() {
   const [selectedLicense, setSelectedLicense] = useState('All');
   const [minStars, setMinStars] = useState([0]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filteredTools, setFilteredTools] = useState(tools);
   const [sortBy, setSortBy] = useState('relevance');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [showDeploymentReady, setShowDeploymentReady] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  // Build search parameters
+  const searchParams: ToolSearchParams = {
+    query: searchQuery || undefined,
+    category: selectedCategory !== 'All' ? selectedCategory : undefined,
+    license: selectedLicense !== 'All' ? selectedLicense : undefined,
+    minStars: minStars[0] * 1000,
+    verified: showVerifiedOnly || undefined,
+    deploymentReady: showDeploymentReady || undefined,
+    sortBy: sortBy !== 'relevance' ? sortBy : undefined,
+    page: currentPage,
+    limit: 12
+  };
+
+  // Fetch tools from backend
+  const { data: toolsResponse, loading, error, refetch } = useApi(
+    () => toolService.getTools(searchParams),
+    [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
+  );
+
+  const tools = toolsResponse?.items || [];
+  const totalPages = toolsResponse?.totalPages || 1;
+
+  // Reset page when filters change
   useEffect(() => {
-    let filtered = tools.filter(tool => {
-      const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesCategory = selectedCategory === 'All' || tool.category === selectedCategory;
-      const matchesLicense = selectedLicense === 'All' || tool.license === selectedLicense;
-      const matchesStars = tool.stars >= minStars[0] * 1000;
-      const matchesVerified = !showVerifiedOnly || tool.verified;
-      const matchesDeployment = !showDeploymentReady || tool.deploymentReady;
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady]);
 
-      return matchesSearch && matchesCategory && matchesLicense && matchesStars && matchesVerified && matchesDeployment;
-    });
-
-    // Sort results
-    switch (sortBy) {
-      case 'stars':
-        filtered.sort((a, b) => b.stars - a.stars);
-        break;
-      case 'ai-score':
-        filtered.sort((a, b) => b.aiScore - a.aiScore);
-        break;
-      case 'recent':
-        filtered.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
-        break;
-      default:
-        // Keep relevance order (default array order)
-        break;
-    }
-
-    setFilteredTools(filtered);
-  }, [searchQuery, selectedCategory, selectedLicense, minStars, sortBy, showVerifiedOnly, showDeploymentReady]);
-
-  const ToolCard = ({ tool }: { tool: typeof tools[0] }) => (
+  const ToolCard = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -221,7 +124,7 @@ export default function SearchPage() {
     </Card>
   );
 
-  const ToolListItem = ({ tool }: { tool: typeof tools[0] }) => (
+  const ToolListItem = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-md transition-shadow cursor-pointer">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
@@ -394,7 +297,8 @@ export default function SearchPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
                 <p className="text-gray-600">
-                  Found {filteredTools.length} tools {searchQuery && `for "${searchQuery}"`}
+                  {loading ? 'Searching...' : `Found ${toolsResponse?.total || 0} tools`}
+                  {searchQuery && ` for "${searchQuery}"`}
                 </p>
               </div>
               
@@ -411,26 +315,89 @@ export default function SearchPage() {
               </Select>
             </div>
 
-            {filteredTools.length === 0 ? (
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                <span className="ml-2 text-gray-600">Loading tools...</span>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
               <Card className="p-12 text-center">
-                <div className="text-gray-400 mb-4">
+                <div className="text-red-400 mb-4">
+                  <Search className="w-12 h-12 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading tools</h3>
+                  <p className="text-gray-600 mb-4">{error}</p>
+                  <Button onClick={refetch}>Try Again</Button>
+                </div>
+              </Card>
+            )}
+
+            {/* No Results */}
+            {!loading && !error && tools.length === 0 && (
+              <Card className="p-12 text-center">
+                <div className="text-gray-400">
                   <Search className="w-12 h-12 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No tools found</h3>
                   <p>Try adjusting your search criteria or filters</p>
                 </div>
               </Card>
-            ) : (
-              <div className={
-                viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              }>
-                {filteredTools.map((tool) => (
+            )}
+
+            {/* Results Grid/List */}
+            {!loading && !error && tools.length > 0 && (
+              <>
+                <div className={
                   viewMode === 'grid' 
-                    ? <ToolCard key={tool.id} tool={tool} />
-                    : <ToolListItem key={tool.id} tool={tool} />
-                ))}
-              </div>
+                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                    : 'space-y-4'
+                }>
+                  {tools.map((tool) => (
+                    viewMode === 'grid' 
+                      ? <ToolCard key={tool.id} tool={tool} />
+                      : <ToolListItem key={tool.id} tool={tool} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center space-x-2 mt-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const page = i + 1;
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
