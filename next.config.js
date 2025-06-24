@@ -23,6 +23,10 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Fix routing for static export
+  async generateStaticParams() {
+    return [];
+  },
   webpack: (config, { isServer, dev }) => {
     // Resolve fallbacks for client-side
     if (!isServer) {
@@ -42,41 +46,6 @@ const nextConfig = {
         path: false,
       };
     }
-    
-    // Optimize chunks for better performance
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-          },
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: 'react',
-            chunks: 'all',
-            priority: 20,
-          },
-          lib: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'lib',
-            chunks: 'all',
-            priority: 10,
-          },
-        },
-      },
-    };
     
     return config;
   },
