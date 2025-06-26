@@ -17,6 +17,7 @@ class ApiClient {
 
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://qlucent-backend-300721674147.us-west1.run.app';
+    console.log('🔧 ApiClient initialized with baseURL:', this.baseURL);
   }
 
   private async request<T>(
@@ -24,6 +25,13 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    console.log('🚀 API Request:', {
+      method: options.method || 'GET',
+      url,
+      headers: options.headers,
+      body: options.body
+    });
     
     const defaultHeaders = {
       'Content-Type': 'application/json',
@@ -41,19 +49,49 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
       
+      console.log('📡 API Response Status:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ API Error Response:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        });
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      
+      console.log('✅ API Success Response:', {
+        url,
+        dataType: typeof data,
+        dataKeys: data && typeof data === 'object' ? Object.keys(data) : 'N/A',
+        dataLength: Array.isArray(data) ? data.length : 
+                   data && typeof data === 'object' && 'items' in data ? 
+                   (Array.isArray(data.items) ? data.items.length : 'items not array') : 'N/A',
+        sampleData: data && typeof data === 'object' ? 
+                   (Array.isArray(data) ? data.slice(0, 2) : 
+                    'items' in data && Array.isArray(data.items) ? data.items.slice(0, 2) : data) : data
+      });
       
       return {
         data,
         success: true,
       };
     } catch (error) {
-      console.error('API Request failed:', error);
+      console.error('💥 API Request failed:', {
+        url,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined
+      });
       
       return {
         error: error instanceof Error ? error.message : 'An unknown error occurred',
@@ -66,6 +104,7 @@ class ApiClient {
     const url = new URL(`${this.baseURL}${endpoint}`);
     
     if (params) {
+      console.log('🔍 Adding query parameters:', params);
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           url.searchParams.append(key, String(value));
@@ -73,10 +112,14 @@ class ApiClient {
       });
     }
 
-    return this.request<T>(url.pathname + url.search);
+    const finalEndpoint = url.pathname + url.search;
+    console.log('📋 Final GET endpoint:', finalEndpoint);
+    
+    return this.request<T>(finalEndpoint);
   }
 
   async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    console.log('📤 POST data:', data);
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -84,6 +127,7 @@ class ApiClient {
   }
 
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    console.log('📝 PUT data:', data);
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -91,6 +135,7 @@ class ApiClient {
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+    console.log('🗑️ DELETE endpoint:', endpoint);
     return this.request<T>(endpoint, {
       method: 'DELETE',
     });
