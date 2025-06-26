@@ -30,6 +30,9 @@ const nextConfig = {
     return [];
   },
   webpack: (config, { isServer, dev }) => {
+    // Disable webpack persistent caching to prevent ENOENT errors
+    config.cache = false;
+    
     // Resolve fallbacks for client-side
     if (!isServer) {
       config.resolve.fallback = {
