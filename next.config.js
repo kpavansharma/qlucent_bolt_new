@@ -30,8 +30,10 @@ const nextConfig = {
     return [];
   },
   webpack: (config, { isServer, dev }) => {
-    // Disable webpack persistent caching to prevent ENOENT errors
-    config.cache = false;
+    // Use memory caching to prevent ENOENT errors with filesystem cache
+    config.cache = {
+      type: 'memory'
+    };
     
     // Resolve fallbacks for client-side
     if (!isServer) {
