@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Star, User, Package, TrendingUp, Calendar, Filter, ExternalLink, Github, Linkedin } from 'lucide-react';
+import { Search, Star, User, Package, TrendingUp, Calendar, Filter, ExternalLink, Github, Linkedin, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,128 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { portfolioService, PortfolioSearchParams } from '@/lib/services/portfolioService';
+import { Portfolio } from '@/lib/types/api';
+import { useApi } from '@/lib/hooks/useApi';
 import Link from 'next/link';
-
-const portfolios = [
-  {
-    id: 1,
-    name: 'Sarah Chen',
-    username: 'sarahchen',
-    title: 'Full Stack Developer',
-    company: 'TechFlow',
-    location: 'San Francisco, CA',
-    avatar: '/api/placeholder/100/100',
-    bio: 'Passionate full-stack developer with 5+ years of experience building scalable web applications. Love exploring new technologies and sharing knowledge.',
-    toolsReviewed: 24,
-    bundlesCreated: 8,
-    totalDownloads: 1250,
-    avgRating: 4.8,
-    joinedDate: '2023-06-15',
-    expertise: ['React', 'Node.js', 'Docker', 'AWS', 'PostgreSQL'],
-    recentTools: [
-      { name: 'Next.js', rating: 5, category: 'Frontend' },
-      { name: 'Prisma', rating: 4, category: 'Database' },
-      { name: 'Tailwind CSS', rating: 5, category: 'Frontend' }
-    ],
-    topBundles: [
-      { name: 'Modern React Stack', downloads: 450, rating: 4.9 },
-      { name: 'Full Stack Starter', downloads: 380, rating: 4.7 }
-    ],
-    socialLinks: {
-      github: 'https://github.com/sarahchen',
-      linkedin: 'https://linkedin.com/in/sarahchen',
-      website: 'https://sarahchen.dev'
-    }
-  },
-  {
-    id: 2,
-    name: 'Marcus Rodriguez',
-    username: 'marcusdev',
-    title: 'DevOps Engineer',
-    company: 'CloudScale',
-    location: 'Austin, TX',
-    avatar: '/api/placeholder/100/100',
-    bio: 'DevOps engineer specializing in Kubernetes, CI/CD, and cloud infrastructure. Helping teams deploy faster and more reliably.',
-    toolsReviewed: 32,
-    bundlesCreated: 12,
-    totalDownloads: 2100,
-    avgRating: 4.9,
-    joinedDate: '2023-03-20',
-    expertise: ['Kubernetes', 'Docker', 'Jenkins', 'Terraform', 'Prometheus'],
-    recentTools: [
-      { name: 'ArgoCD', rating: 5, category: 'DevOps' },
-      { name: 'Helm', rating: 4, category: 'DevOps' },
-      { name: 'Grafana', rating: 5, category: 'Monitoring' }
-    ],
-    topBundles: [
-      { name: 'K8s Monitoring Stack', downloads: 680, rating: 4.8 },
-      { name: 'CI/CD Pipeline Starter', downloads: 520, rating: 4.9 }
-    ],
-    socialLinks: {
-      github: 'https://github.com/marcusdev',
-      linkedin: 'https://linkedin.com/in/marcusrodriguez'
-    }
-  },
-  {
-    id: 3,
-    name: 'Emily Watson',
-    username: 'emilywatson',
-    title: 'Data Scientist',
-    company: 'DataCorp',
-    location: 'New York, NY',
-    avatar: '/api/placeholder/100/100',
-    bio: 'Data scientist with expertise in machine learning and data visualization. Building intelligent systems that make a difference.',
-    toolsReviewed: 18,
-    bundlesCreated: 6,
-    totalDownloads: 890,
-    avgRating: 4.7,
-    joinedDate: '2023-08-10',
-    expertise: ['Python', 'TensorFlow', 'Jupyter', 'Pandas', 'Scikit-learn'],
-    recentTools: [
-      { name: 'MLflow', rating: 4, category: 'AI/ML' },
-      { name: 'Streamlit', rating: 5, category: 'Data Science' },
-      { name: 'Apache Airflow', rating: 4, category: 'Data Engineering' }
-    ],
-    topBundles: [
-      { name: 'ML Pipeline Starter', downloads: 320, rating: 4.6 },
-      { name: 'Data Analysis Toolkit', downloads: 280, rating: 4.8 }
-    ],
-    socialLinks: {
-      github: 'https://github.com/emilywatson',
-      linkedin: 'https://linkedin.com/in/emilywatson',
-      website: 'https://emilywatson.ai'
-    }
-  },
-  {
-    id: 4,
-    name: 'Alex Kim',
-    username: 'alexkim',
-    title: 'Security Engineer',
-    company: 'SecureNet',
-    location: 'Seattle, WA',
-    avatar: '/api/placeholder/100/100',
-    bio: 'Cybersecurity expert focused on DevSecOps and application security. Making the web a safer place, one deployment at a time.',
-    toolsReviewed: 28,
-    bundlesCreated: 10,
-    totalDownloads: 1560,
-    avgRating: 4.8,
-    joinedDate: '2023-05-05',
-    expertise: ['Security', 'DevSecOps', 'Penetration Testing', 'OWASP', 'Vault'],
-    recentTools: [
-      { name: 'SonarQube', rating: 5, category: 'Security' },
-      { name: 'HashiCorp Vault', rating: 4, category: 'Security' },
-      { name: 'OWASP ZAP', rating: 4, category: 'Security' }
-    ],
-    topBundles: [
-      { name: 'Security Scanning Suite', downloads: 420, rating: 4.9 },
-      { name: 'DevSecOps Starter', downloads: 380, rating: 4.7 }
-    ],
-    socialLinks: {
-      github: 'https://github.com/alexkim',
-      linkedin: 'https://linkedin.com/in/alexkim'
-    }
-  }
-];
 
 const categories = ['All', 'Frontend', 'Backend', 'DevOps', 'Data Science', 'AI/ML', 'Security', 'Mobile'];
 const sortOptions = ['Most Active', 'Highest Rated', 'Most Downloads', 'Recently Joined'];
@@ -139,41 +21,24 @@ export default function PortfoliosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('Most Active');
-  const [selectedPortfolio, setSelectedPortfolio] = useState<any>(null);
+  const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null);
 
-  const filteredPortfolios = portfolios.filter(portfolio => {
-    const matchesSearch = portfolio.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         portfolio.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         portfolio.expertise.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'All' || 
-                           portfolio.expertise.some(skill => {
-                             // Map skills to categories
-                             const skillCategories: { [key: string]: string[] } = {
-                               'Frontend': ['React', 'Vue', 'Angular', 'Next.js', 'Tailwind CSS'],
-                               'Backend': ['Node.js', 'Express', 'Django', 'FastAPI'],
-                               'DevOps': ['Docker', 'Kubernetes', 'Jenkins', 'Terraform', 'AWS'],
-                               'Data Science': ['Python', 'Pandas', 'Jupyter', 'Streamlit'],
-                               'AI/ML': ['TensorFlow', 'PyTorch', 'Scikit-learn', 'MLflow'],
-                               'Security': ['OWASP', 'Vault', 'Security', 'DevSecOps'],
-                               'Database': ['PostgreSQL', 'MongoDB', 'Redis', 'Prisma']
-                             };
-                             return skillCategories[selectedCategory]?.includes(skill);
-                           });
+  // Build search parameters
+  const searchParams: PortfolioSearchParams = {
+    query: searchQuery || undefined,
+    expertise: selectedCategory !== 'All' ? selectedCategory : undefined,
+    sortBy: sortBy !== 'Most Active' ? sortBy : undefined,
+    page: 1,
+    limit: 20
+  };
 
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case 'Highest Rated':
-        return b.avgRating - a.avgRating;
-      case 'Most Downloads':
-        return b.totalDownloads - a.totalDownloads;
-      case 'Recently Joined':
-        return new Date(b.joinedDate).getTime() - new Date(a.joinedDate).getTime();
-      default:
-        return (b.toolsReviewed + b.bundlesCreated) - (a.toolsReviewed + a.bundlesCreated);
-    }
-  });
+  // Fetch portfolios from backend
+  const { data: portfoliosResponse, loading, error } = useApi(
+    () => portfolioService.getPortfolios(searchParams),
+    [searchQuery, selectedCategory, sortBy]
+  );
+
+  const portfolios = portfoliosResponse?.items || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -275,7 +140,7 @@ export default function PortfoliosPage() {
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Total Developers:</span>
-                  <span className="font-medium">{portfolios.length}</span>
+                  <span className="font-medium">{portfoliosResponse?.total || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Tools Reviewed:</span>
@@ -305,7 +170,7 @@ export default function PortfoliosPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Developer Portfolios</h2>
                 <p className="text-gray-600">
-                  {filteredPortfolios.length} developers found
+                  {loading ? 'Loading...' : `${portfoliosResponse?.total || 0} developers found`}
                 </p>
               </div>
               
@@ -321,105 +186,129 @@ export default function PortfoliosPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPortfolios.map((portfolio) => (
-                <Card key={portfolio.id} className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={portfolio.avatar} alt={portfolio.name} />
-                        <AvatarFallback className="bg-purple-100 text-purple-600 font-bold">
-                          {portfolio.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg group-hover:text-purple-600 transition-colors truncate">
-                          {portfolio.name}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600 truncate">{portfolio.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{portfolio.company} • {portfolio.location}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-gray-700 line-clamp-2">{portfolio.bio}</p>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="font-bold text-blue-600">{portfolio.toolsReviewed}</div>
-                        <div className="text-xs text-gray-600">Tools</div>
-                      </div>
-                      <div className="text-center p-2 bg-purple-50 rounded">
-                        <div className="font-bold text-purple-600">{portfolio.bundlesCreated}</div>
-                        <div className="text-xs text-gray-600">Bundles</div>
-                      </div>
-                    </div>
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+                <span className="ml-2 text-gray-600">Loading portfolios...</span>
+              </div>
+            )}
 
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                        <span className="font-medium">{portfolio.avgRating}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        <span>{portfolio.totalDownloads.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-medium text-gray-700 mb-1">Expertise:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {portfolio.expertise.slice(0, 3).map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-xs">
-                            {skill}
-                          </Badge>
-                        ))}
-                        {portfolio.expertise.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{portfolio.expertise.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => setSelectedPortfolio(portfolio)}
-                      >
-                        View Portfolio
-                      </Button>
-                      <div className="flex gap-1">
-                        {portfolio.socialLinks.github && (
-                          <Button variant="outline" size="sm" className="px-2" asChild>
-                            <Link href={portfolio.socialLinks.github} target="_blank">
-                              <Github className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                        )}
-                        {portfolio.socialLinks.linkedin && (
-                          <Button variant="outline" size="sm" className="px-2" asChild>
-                            <Link href={portfolio.socialLinks.linkedin} target="_blank">
-                              <Linkedin className="w-4 h-4" />
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredPortfolios.length === 0 && (
+            {/* Error State */}
+            {error && (
               <Card className="p-12 text-center">
-                <div className="text-gray-400">
+                <div className="text-red-400 mb-4">
                   <User className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No portfolios found</h3>
-                  <p>Try adjusting your search criteria or filters</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading portfolios</h3>
+                  <p className="text-gray-600">{error}</p>
                 </div>
               </Card>
+            )}
+
+            {/* Results */}
+            {!loading && !error && (
+              <>
+                {portfolios.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <div className="text-gray-400">
+                      <User className="w-12 h-12 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No portfolios found</h3>
+                      <p>Try adjusting your search criteria or filters</p>
+                    </div>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {portfolios.map((portfolio) => (
+                      <Card key={portfolio.id} className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={portfolio.avatar} alt={portfolio.name} />
+                              <AvatarFallback className="bg-purple-100 text-purple-600 font-bold">
+                                {portfolio.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg group-hover:text-purple-600 transition-colors truncate">
+                                {portfolio.name}
+                              </CardTitle>
+                              <p className="text-sm text-gray-600 truncate">{portfolio.title}</p>
+                              <p className="text-xs text-gray-500 truncate">{portfolio.company} • {portfolio.location}</p>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <p className="text-sm text-gray-700 line-clamp-2">{portfolio.bio}</p>
+                          
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="text-center p-2 bg-blue-50 rounded">
+                              <div className="font-bold text-blue-600">{portfolio.toolsReviewed}</div>
+                              <div className="text-xs text-gray-600">Tools</div>
+                            </div>
+                            <div className="text-center p-2 bg-purple-50 rounded">
+                              <div className="font-bold text-purple-600">{portfolio.bundlesCreated}</div>
+                              <div className="text-xs text-gray-600">Bundles</div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center">
+                              <Star className="w-4 h-4 mr-1 text-yellow-500" />
+                              <span className="font-medium">{portfolio.avgRating}</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <TrendingUp className="w-4 h-4 mr-1" />
+                              <span>{portfolio.totalDownloads.toLocaleString()}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-gray-700 mb-1">Expertise:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {portfolio.expertise.slice(0, 3).map((skill) => (
+                                <Badge key={skill} variant="secondary" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                              {portfolio.expertise.length > 3 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{portfolio.expertise.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2">
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => setSelectedPortfolio(portfolio)}
+                            >
+                              View Portfolio
+                            </Button>
+                            <div className="flex gap-1">
+                              {portfolio.socialLinks.github && (
+                                <Button variant="outline" size="sm" className="px-2" asChild>
+                                  <Link href={portfolio.socialLinks.github} target="_blank">
+                                    <Github className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                              )}
+                              {portfolio.socialLinks.linkedin && (
+                                <Button variant="outline" size="sm" className="px-2" asChild>
+                                  <Link href={portfolio.socialLinks.linkedin} target="_blank">
+                                    <Linkedin className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
