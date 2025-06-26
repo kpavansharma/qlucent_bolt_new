@@ -173,16 +173,16 @@ export default function BundlesPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Included Tools ({bundle.tools.length}):</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Included Tools ({(bundle.tools || []).length}):</p>
                         <div className="flex flex-wrap gap-1">
-                          {bundle.tools.slice(0, 4).map((tool) => (
+                          {(bundle.tools || []).slice(0, 4).map((tool) => (
                             <Badge key={tool} variant="secondary" className="text-xs">
                               {tool}
                             </Badge>
                           ))}
-                          {bundle.tools.length > 4 && (
+                          {(bundle.tools || []).length > 4 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{bundle.tools.length - 4} more
+                              +{(bundle.tools || []).length - 4} more
                             </Badge>
                           )}
                         </div>
@@ -368,16 +368,16 @@ export default function BundlesPage() {
                           </CardHeader>
                           <CardContent className="space-y-3">
                             <div>
-                              <p className="text-xs font-medium text-gray-700 mb-1">Tools ({bundle.tools.length}):</p>
+                              <p className="text-xs font-medium text-gray-700 mb-1">Tools ({(bundle.tools || []).length}):</p>
                               <div className="flex flex-wrap gap-1">
-                                {bundle.tools.slice(0, 3).map((tool) => (
+                                {(bundle.tools || []).slice(0, 3).map((tool) => (
                                   <Badge key={tool} variant="secondary" className="text-xs">
                                     {tool}
                                   </Badge>
                                 ))}
-                                {bundle.tools.length > 3 && (
+                                {(bundle.tools || []).length > 3 && (
                                   <Badge variant="secondary" className="text-xs">
-                                    +{bundle.tools.length - 3}
+                                    +{(bundle.tools || []).length - 3}
                                   </Badge>
                                 )}
                               </div>
