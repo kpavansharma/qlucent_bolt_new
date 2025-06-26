@@ -12,13 +12,17 @@ import { Slider } from '@/components/ui/slider';
 import { toolService, ToolSearchParams } from '@/lib/services/toolService';
 import { Tool } from '@/lib/types/api';
 import { useApi } from '@/lib/hooks/useApi';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 const categories = ['All', 'DevOps', 'AI/ML', 'Frontend', 'Backend', 'Database', 'Security', 'Monitoring'];
 const licenses = ['All', 'MIT', 'Apache 2.0', 'GPL', 'BSD', 'Other'];
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('query') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLicense, setSelectedLicense] = useState('All');
   const [minStars, setMinStars] = useState([0]);
@@ -29,7 +33,7 @@ export default function SearchPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Build search parameters
-  const searchParams: ToolSearchParams = {
+  const toolSearchParams: ToolSearchParams = {
     query: searchQuery || undefined,
     category: selectedCategory !== 'All' ? selectedCategory : undefined,
     license: selectedLicense !== 'All' ? selectedLicense : undefined,
@@ -43,7 +47,7 @@ export default function SearchPage() {
 
   // Fetch tools from backend
   const { data: toolsResponse, loading, error, refetch } = useApi(
-    () => toolService.getTools(searchParams),
+    () => toolService.getTools(toolSearchParams),
     [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
   );
 
@@ -55,12 +59,21 @@ export default function SearchPage() {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady]);
 
+  // Set initial search query from URL params
+  useEffect(() => {
+    if (initialQuery && initialQuery !== searchQuery) {
+      setSearchQuery(initialQuery);
+    }
+  }, [initialQuery]);
+
   const ToolCard = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg group-hover:text-purple-600 transition-colors flex items-center gap-2">
-            {tool.name}
+            <Link href={`/tools/${tool.id}`} className="hover:underline">
+              {tool.name}
+            </Link>
             {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Verified</Badge>}
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -130,7 +143,11 @@ export default function SearchPage() {
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold hover:text-purple-600 transition-colors">{tool.name}</h3>
+              <h3 className="text-lg font-semibold hover:text-purple-600 transition-colors">
+                <Link href={`/tools/${tool.id}`} className="hover:underline">
+                  {tool.name}
+                </Link>
+              </h3>
               {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Verified</Badge>}
               <Badge variant="outline" className="text-xs">{tool.aiScore}% AI Match</Badge>
             </div>

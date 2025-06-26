@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Star, Download, Github, ExternalLink, Shield, Zap, Heart, Share2, BookOpen, Users, GitBranch, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Star, Download, Github, ExternalLink, Shield, Zap, Heart, Share2, BookOpen, Users, GitBranch, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,15 +9,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { toolData } from '@/lib/tool-data';
+import { toolService } from '@/lib/services/toolService';
+import { useApi } from '@/lib/hooks/useApi';
 
 export default function ToolDetailPage() {
   const params = useParams();
   const toolId = params.id as string;
-  const tool = toolData[toolId as keyof typeof toolData];
   const [activeTab, setActiveTab] = useState('overview');
   const [isFavorited, setIsFavorited] = useState(false);
 
+  // Fetch tool data from backend
+  const { data: tool, loading, error } = useApi(
+    () => toolService.getToolById(toolId),
+    [toolId]
+  );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <Loader2 className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
+          <h2 className="text-xl font-semibold mb-2">Loading Tool Details</h2>
+          <p className="text-gray-600">Please wait while we fetch the tool information...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Error Loading Tool</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="flex gap-2 justify-center">
+            <Button asChild>
+              <Link href="/search">Back to Search</Link>
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Tool not found
   if (!tool) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -49,7 +90,7 @@ export default function ToolDetailPage() {
               <Separator orientation="vertical" className="h-6" />
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">D</span>
+                  <span className="text-white font-bold text-sm">{tool.name.charAt(0)}</span>
                 </div>
                 <span className="text-xl font-bold text-gray-900">{tool.name}</span>
                 {tool.verified && (
@@ -75,12 +116,14 @@ export default function ToolDetailPage() {
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
-              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600" asChild>
-                <Link href={`/deploy/${tool.id}`}>
-                  <Zap className="w-4 h-4 mr-2" />
-                  Deploy Now
-                </Link>
-              </Button>
+              {tool.deploymentReady && (
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600" asChild>
+                  <Link href={`/deploy/${tool.id}`}>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Deploy Now
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -143,52 +186,58 @@ export default function ToolDetailPage() {
 
                 <TabsContent value="overview" className="mt-6">
                   <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Key Features</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {tool.features.map((feature, index) => (
-                            <div key={index} className="flex items-center space-x-2">
-                              <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                              <span className="text-sm">{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {tool.features && tool.features.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Key Features</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {tool.features.map((feature, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                                <span className="text-sm">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Use Cases</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {tool.useCases.map((useCase, index) => (
-                            <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                              <span className="text-sm font-medium">{useCase}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {tool.useCases && tool.useCases.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Use Cases</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {tool.useCases.map((useCase, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                <span className="text-sm font-medium">{useCase}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Similar Tools</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {tool.similarTools.map((similar, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <span className="font-medium">{similar.name}</span>
-                              <Badge variant="outline">{similar.similarity}% similar</Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {tool.similarTools && tool.similarTools.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Similar Tools</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {tool.similarTools.map((similar, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span className="font-medium">{similar.name}</span>
+                                <Badge variant="outline">{similar.similarity}% similar</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </TabsContent>
 
@@ -198,32 +247,38 @@ export default function ToolDetailPage() {
                       <CardTitle>Technical Details</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div>
-                        <h4 className="font-medium mb-2">Programming Languages</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {tool.languages.map(lang => (
-                            <Badge key={lang} variant="outline">{lang}</Badge>
-                          ))}
+                      {tool.languages && tool.languages.length > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-2">Programming Languages</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {tool.languages.map(lang => (
+                              <Badge key={lang} variant="outline">{lang}</Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
-                      <div>
-                        <h4 className="font-medium mb-2">Platform Compatibility</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {tool.compatibility.map(platform => (
-                            <Badge key={platform} variant="secondary">{platform}</Badge>
-                          ))}
+                      {tool.compatibility && tool.compatibility.length > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-2">Platform Compatibility</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {tool.compatibility.map(platform => (
+                              <Badge key={platform} variant="secondary">{platform}</Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      <div>
-                        <h4 className="font-medium mb-2">System Requirements</h4>
-                        <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                          <div><strong>Memory:</strong> {tool.requirements.memory}</div>
-                          <div><strong>Storage:</strong> {tool.requirements.storage}</div>
-                          <div><strong>OS:</strong> {tool.requirements.os}</div>
+                      {tool.requirements && (
+                        <div>
+                          <h4 className="font-medium mb-2">System Requirements</h4>
+                          <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                            <div><strong>Memory:</strong> {tool.requirements.memory}</div>
+                            <div><strong>Storage:</strong> {tool.requirements.storage}</div>
+                            <div><strong>OS:</strong> {tool.requirements.os}</div>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -238,25 +293,25 @@ export default function ToolDetailPage() {
                         <div>
                           <h4 className="font-medium mb-3">Quick Install</h4>
                           <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
-                            # Install Docker<br/>
-                            curl -fsSL https://get.docker.com -o get-docker.sh<br/>
-                            sh get-docker.sh<br/><br/>
-                            # Verify installation<br/>
-                            docker --version
+                            # Install {tool.name}<br/>
+                            # Please refer to the official documentation for installation instructions<br/>
+                            # Visit: {tool.documentation || tool.website || tool.github}
                           </div>
                         </div>
                         
-                        <div>
-                          <h4 className="font-medium mb-3">Available Versions</h4>
-                          <div className="space-y-2">
-                            {tool.versions.map(version => (
-                              <div key={version} className="flex items-center justify-between p-2 border rounded">
-                                <span>{version}</span>
-                                <Badge variant="outline">Stable</Badge>
-                              </div>
-                            ))}
+                        {tool.versions && tool.versions.length > 0 && (
+                          <div>
+                            <h4 className="font-medium mb-3">Available Versions</h4>
+                            <div className="space-y-2">
+                              {tool.versions.map(version => (
+                                <div key={version} className="flex items-center justify-between p-2 border rounded">
+                                  <span>{version}</span>
+                                  <Badge variant="outline">Stable</Badge>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -264,55 +319,59 @@ export default function ToolDetailPage() {
 
                 <TabsContent value="support" className="mt-6">
                   <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Support Options</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <h4 className="font-medium mb-2">Community Support</h4>
-                          <p className="text-sm text-gray-600">{tool.support.community}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Documentation</h4>
-                          <p className="text-sm text-gray-600">{tool.support.documentation}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Training</h4>
-                          <p className="text-sm text-gray-600">{tool.support.training}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-medium mb-2">Enterprise Support</h4>
-                          <p className="text-sm text-gray-600">{tool.support.enterprise}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {tool.support && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Support Options</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <h4 className="font-medium mb-2">Community Support</h4>
+                            <p className="text-sm text-gray-600">{tool.support.community}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2">Documentation</h4>
+                            <p className="text-sm text-gray-600">{tool.support.documentation}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2">Training</h4>
+                            <p className="text-sm text-gray-600">{tool.support.training}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2">Enterprise Support</h4>
+                            <p className="text-sm text-gray-600">{tool.support.enterprise}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
 
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Pricing</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="text-center p-4 border rounded-lg">
-                            <div className="font-medium">Personal</div>
-                            <div className="text-lg font-bold text-green-600">{tool.pricing.personal}</div>
+                    {tool.pricing && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Pricing</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-4 border rounded-lg">
+                              <div className="font-medium">Personal</div>
+                              <div className="text-lg font-bold text-green-600">{tool.pricing.personal}</div>
+                            </div>
+                            <div className="text-center p-4 border rounded-lg">
+                              <div className="font-medium">Pro</div>
+                              <div className="text-lg font-bold">{tool.pricing.pro}</div>
+                            </div>
+                            <div className="text-center p-4 border rounded-lg">
+                              <div className="font-medium">Team</div>
+                              <div className="text-lg font-bold">{tool.pricing.team}</div>
+                            </div>
+                            <div className="text-center p-4 border rounded-lg">
+                              <div className="font-medium">Business</div>
+                              <div className="text-lg font-bold">{tool.pricing.business}</div>
+                            </div>
                           </div>
-                          <div className="text-center p-4 border rounded-lg">
-                            <div className="font-medium">Pro</div>
-                            <div className="text-lg font-bold">{tool.pricing.pro}</div>
-                          </div>
-                          <div className="text-center p-4 border rounded-lg">
-                            <div className="font-medium">Team</div>
-                            <div className="text-lg font-bold">{tool.pricing.team}</div>
-                          </div>
-                          <div className="text-center p-4 border rounded-lg">
-                            <div className="font-medium">Business</div>
-                            <div className="text-lg font-bold">{tool.pricing.business}</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -326,30 +385,38 @@ export default function ToolDetailPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full" size="lg" asChild>
-                  <Link href={`/deploy/${tool.id}`}>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Deploy Now
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={tool.github} target="_blank">
-                    <Github className="w-4 h-4 mr-2" />
-                    View on GitHub
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={tool.documentation} target="_blank">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    Documentation
-                  </Link>
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={tool.website} target="_blank">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Official Website
-                  </Link>
-                </Button>
+                {tool.deploymentReady && (
+                  <Button className="w-full" size="lg" asChild>
+                    <Link href={`/deploy/${tool.id}`}>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Deploy Now
+                    </Link>
+                  </Button>
+                )}
+                {tool.github && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={tool.github} target="_blank">
+                      <Github className="w-4 h-4 mr-2" />
+                      View on GitHub
+                    </Link>
+                  </Button>
+                )}
+                {tool.documentation && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={tool.documentation} target="_blank">
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      Documentation
+                    </Link>
+                  </Button>
+                )}
+                {tool.website && (
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href={tool.website} target="_blank">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Official Website
+                    </Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -366,14 +433,18 @@ export default function ToolDetailPage() {
                   <span className="text-gray-600">License:</span>
                   <span>{tool.license}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">File Size:</span>
-                  <span>{tool.fileSize}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Maintainer:</span>
-                  <span>{tool.maintainers[0]}</span>
-                </div>
+                {tool.fileSize && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">File Size:</span>
+                    <span>{tool.fileSize}</span>
+                  </div>
+                )}
+                {tool.maintainers && tool.maintainers.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Maintainer:</span>
+                    <span>{tool.maintainers[0]}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Deployment Ready:</span>
                   {tool.deploymentReady ? (

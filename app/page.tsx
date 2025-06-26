@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const featuredTools = [
   {
@@ -309,6 +310,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Check if user is logged in
@@ -328,6 +330,20 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/search');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
@@ -487,6 +503,7 @@ export default function Home() {
                 placeholder="Search for tools, frameworks, or describe your needs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="pl-16 pr-6 py-6 text-lg border-2 rounded-2xl focus:border-purple-500 focus:ring-purple-500 shadow-xl bg-background"
               />
             </div>
@@ -494,12 +511,10 @@ export default function Home() {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
-                asChild
+                onClick={handleSearch}
               >
-                <Link href="/search">
-                  <Search className="mr-2 w-5 h-5" />
-                  Start Exploring
-                </Link>
+                <Search className="mr-2 w-5 h-5" />
+                Start Exploring
               </Button>
               <Button 
                 variant="outline" 
