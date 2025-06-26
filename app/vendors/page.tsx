@@ -44,7 +44,7 @@ export default function VendorsPage() {
   );
 
   // Fetch featured vendors
-  const { data: featuredVendors, loading: featuredLoading } = useApi(
+  const { data: featuredVendors, loading: featuredLoading, error: featuredError } = useApi(
     () => vendorService.getFeaturedVendors(),
     []
   );
