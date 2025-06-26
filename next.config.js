@@ -12,9 +12,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: { 
-    unoptimized: true,
-    loader: 'custom',
-    loaderFile: './image-loader.js'
+    unoptimized: true
   },
   experimental: {
     esmExternals: false,
