@@ -21,9 +21,10 @@ const licenses = ['All', 'MIT', 'Apache 2.0', 'GPL', 'BSD', 'Other'];
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('query') || '';
+  const initialCategory = searchParams.get('category') || 'All';
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedLicense, setSelectedLicense] = useState('All');
   const [minStars, setMinStars] = useState([0]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -59,12 +60,15 @@ export default function SearchPage() {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady]);
 
-  // Set initial search query from URL params
+  // Set initial search query and category from URL params
   useEffect(() => {
     if (initialQuery && initialQuery !== searchQuery) {
       setSearchQuery(initialQuery);
     }
-  }, [initialQuery]);
+    if (initialCategory && initialCategory !== selectedCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialQuery, initialCategory]);
 
   const ToolCard = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
@@ -201,8 +205,11 @@ export default function SearchPage() {
             
             <div className="flex-1 max-w-2xl mx-8">
               <div className="relative">
+                <label htmlFor="search-input" className="sr-only">Search tools, frameworks, or describe your needs</label>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
+                  id="search-input"
+                  name="search"
                   type="text"
                   placeholder="Search tools, frameworks, or describe your needs..."
                   value={searchQuery}
@@ -245,9 +252,9 @@ export default function SearchPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Category</label>
+                  <label htmlFor="category-select" className="text-sm font-medium mb-2 block">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
+                    <SelectTrigger id="category-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -259,9 +266,9 @@ export default function SearchPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">License</label>
+                  <label htmlFor="license-select" className="text-sm font-medium mb-2 block">License</label>
                   <Select value={selectedLicense} onValueChange={setSelectedLicense}>
-                    <SelectTrigger>
+                    <SelectTrigger id="license-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -273,10 +280,11 @@ export default function SearchPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">
+                  <label htmlFor="stars-slider" className="text-sm font-medium mb-2 block">
                     Minimum Stars: {minStars[0]}k+
                   </label>
                   <Slider
+                    id="stars-slider"
                     value={minStars}
                     onValueChange={setMinStars}
                     max={200}

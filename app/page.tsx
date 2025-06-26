@@ -130,42 +130,48 @@ const toolCategories = [
     description: 'Container orchestration, CI/CD, monitoring',
     icon: <Cloud className="w-8 h-8" />,
     tools: ['Docker', 'Kubernetes', 'Jenkins', 'Terraform'],
-    color: 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'
+    color: 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800',
+    category: 'DevOps'
   },
   {
     name: 'AI & Machine Learning',
     description: 'ML frameworks, data processing, model deployment',
     icon: <Sparkles className="w-8 h-8" />,
     tools: ['TensorFlow', 'PyTorch', 'MLflow', 'Jupyter'],
-    color: 'bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800'
+    color: 'bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800',
+    category: 'AI/ML'
   },
   {
     name: 'Security & Compliance',
     description: 'Security scanning, compliance, vulnerability management',
     icon: <Shield className="w-8 h-8" />,
     tools: ['SonarQube', 'Vault', 'Snyk', 'OWASP ZAP'],
-    color: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+    color: 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800',
+    category: 'Security'
   },
   {
     name: 'Monitoring & Observability',
     description: 'Application monitoring, logging, alerting',
     icon: <Monitor className="w-8 h-8" />,
     tools: ['Prometheus', 'Grafana', 'Jaeger', 'ELK Stack'],
-    color: 'bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800'
+    color: 'bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800',
+    category: 'Monitoring'
   },
   {
     name: 'Database & Storage',
     description: 'Databases, caching, data warehousing',
     icon: <Database className="w-8 h-8" />,
     tools: ['PostgreSQL', 'Redis', 'MongoDB', 'ClickHouse'],
-    color: 'bg-cyan-50 dark:bg-cyan-950 border-cyan-200 dark:border-cyan-800'
+    color: 'bg-cyan-50 dark:bg-cyan-950 border-cyan-200 dark:border-cyan-800',
+    category: 'Database'
   },
   {
     name: 'Development Tools',
     description: 'IDEs, testing frameworks, code quality',
     icon: <Code className="w-8 h-8" />,
     tools: ['VS Code', 'Jest', 'ESLint', 'Prettier'],
-    color: 'bg-pink-50 dark:bg-pink-950 border-pink-200 dark:border-pink-800'
+    color: 'bg-pink-50 dark:bg-pink-950 border-pink-200 dark:border-pink-800',
+    category: 'Frontend'
   }
 ];
 
@@ -332,7 +338,10 @@ export default function Home() {
     await supabase.auth.signOut();
   };
 
-  const handleSearch = () => {
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (searchQuery.trim()) {
       router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
     } else {
@@ -340,10 +349,8 @@ export default function Home() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+  const handleCategoryClick = (category: string) => {
+    router.push(`/search?category=${encodeURIComponent(category)}`);
   };
 
   return (
@@ -496,19 +503,22 @@ export default function Home() {
           
           {/* Search Bar */}
           <div className="relative max-w-3xl mx-auto mb-12">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
+              <label htmlFor="hero-search" className="sr-only">Search for tools, frameworks, or describe your needs</label>
               <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground w-6 h-6" />
               <Input
+                id="hero-search"
+                name="search"
                 type="text"
                 placeholder="Search for tools, frameworks, or describe your needs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
                 className="pl-16 pr-6 py-6 text-lg border-2 rounded-2xl focus:border-purple-500 focus:ring-purple-500 shadow-xl bg-background"
               />
-            </div>
+            </form>
             <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
               <Button 
+                type="submit"
                 size="lg" 
                 className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                 onClick={handleSearch}
@@ -733,10 +743,12 @@ export default function Home() {
                       </Badge>
                     ))}
                   </div>
-                  <Button variant="ghost" className="w-full mt-4 group-hover:bg-background/50" asChild>
-                    <Link href="/search">
-                      Explore Category <ArrowRight className="ml-2 w-4 h-4" />
-                    </Link>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-4 group-hover:bg-background/50" 
+                    onClick={() => handleCategoryClick(category.category)}
+                  >
+                    Explore Category <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </CardContent>
               </Card>
