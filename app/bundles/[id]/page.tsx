@@ -180,7 +180,7 @@ export default function BundleDetailPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-4">
-                  {bundle.tags && bundle.tags.map((tag) => (
+                  {(bundle.tags || []).map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -253,14 +253,14 @@ export default function BundleDetailPage() {
                 <TabsContent value="tools" className="mt-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Included Tools ({bundle.tools.length})</CardTitle>
+                      <CardTitle>Included Tools ({(bundle.tools || []).length})</CardTitle>
                       <CardDescription>
                         This bundle includes the following tools and technologies
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {bundle.tools.map((tool, index) => (
+                        {(bundle.tools || []).map((tool, index) => (
                           <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                               <Package className="w-4 h-4 text-purple-600" />
