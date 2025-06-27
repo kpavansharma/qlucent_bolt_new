@@ -174,14 +174,14 @@ export default function VendorsPage() {
                       <div>
                         <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
                         <div className="flex flex-wrap gap-1">
-                          {vendor.specialties.slice(0, 4).map((specialty) => (
+                          {(vendor.specialties || []).slice(0, 4).map((specialty) => (
                             <Badge key={specialty} variant="secondary" className="text-xs">
                               {specialty}
                             </Badge>
                           ))}
-                          {vendor.specialties.length > 4 && (
+                          {(vendor.specialties || []).length > 4 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{vendor.specialties.length - 4} more
+                              +{(vendor.specialties || []).length - 4} more
                             </Badge>
                           )}
                         </div>
@@ -405,18 +405,23 @@ export default function VendorsPage() {
                                 <div className="mb-4">
                                   <p className="text-sm font-medium text-gray-700 mb-2">Specialties:</p>
                                   <div className="flex flex-wrap gap-1">
-                                    {vendor.specialties.map((specialty) => (
+                                    {(vendor.specialties || []).slice(0, 4).map((specialty) => (
                                       <Badge key={specialty} variant="secondary" className="text-xs">
                                         {specialty}
                                       </Badge>
                                     ))}
+                                    {(vendor.specialties || []).length > 4 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        +{(vendor.specialties || []).length - 4} more
+                                      </Badge>
+                                    )}
                                   </div>
                                 </div>
                                 
                                 <div className="mb-4">
                                   <p className="text-sm font-medium text-gray-700 mb-2">Services:</p>
                                   <div className="flex flex-wrap gap-1">
-                                    {vendor.services.map((service) => (
+                                    {(vendor.services || []).map((service) => (
                                       <Badge key={service} variant="outline" className="text-xs">
                                         {service}
                                       </Badge>
