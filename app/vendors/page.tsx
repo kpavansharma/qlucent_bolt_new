@@ -43,13 +43,14 @@ export default function VendorsPage() {
     [searchQuery, selectedSpecialty, selectedService, selectedTeamSize, sortBy, showVerifiedOnly]
   );
 
-  // Fetch featured vendors
-  const { data: featuredVendors, loading: featuredLoading, error: featuredError } = useApi(
-    () => vendorService.getFeaturedVendors(),
+  // Get featured vendors from the main vendors list (first 4)
+  const { data: featuredVendorsResponse, loading: featuredLoading, error: featuredError } = useApi(
+    () => vendorService.getVendors({ limit: 4, sortBy: 'rating' }),
     []
   );
 
   const vendors = vendorsResponse?.items || [];
+  const featuredVendors = featuredVendorsResponse?.items || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
