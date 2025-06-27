@@ -7,11 +7,16 @@ export async function generateStaticParams() {
     // Fetch all tools to generate static paths
     const toolsResponse: PaginatedResponse<Tool> = await toolService.getTools({ limit: 1000 }); // Set a high limit to get all tools
     
-    return toolsResponse.items.map((tool) => ({
-      id: tool.id.toString(),
-    }));
+    // Ensure toolsResponse.items is an array before mapping
+    if (toolsResponse && Array.isArray(toolsResponse.items)) {
+      return toolsResponse.items.map((tool) => ({
+        id: tool.id.toString(),
+      }));
+    }
+    
+    // Return empty array if items is not an array
+    return [];
   } catch (error) {
-    console.error('Error generating static params:', error);
     // Return empty array if there's an error fetching tools
     return [];
   }
