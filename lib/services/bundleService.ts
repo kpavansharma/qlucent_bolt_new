@@ -12,16 +12,16 @@ export interface BundleSearchParams {
 }
 
 export const bundleService = {
-  // Get all bundles with optional filters (client-side filtering since backend filtering is not working)
+  // Get all bundles with optional filters (use backend search)
   async getBundles(params?: BundleSearchParams): Promise<PaginatedResponse<Bundle>> {
-    console.log('🔍 Fetching bundles with params:', params);
+    console.log('🔍 Fetching bundles with backend search:', params);
     
     try {
-      // Fetch all bundles since backend filtering doesn't work
-      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 1000 });
+      // Use backend search with proper parameters
+      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', params);
       
       if (!response.success || !response.data) {
-        console.error('❌ Failed to fetch bundles:', response.error);
+        console.error('❌ Failed to fetch bundles from backend:', response.error);
         return {
           items: [],
           total: 0,
@@ -49,73 +49,14 @@ export const bundleService = {
         featured: bundle.featured || false
       }));
       
-      let filteredBundles = bundlesWithDefaults;
-      
-      // Apply search query filter
-      if (params?.query) {
-        const searchTerm = params.query.toLowerCase();
-        filteredBundles = filteredBundles.filter(bundle => 
-          bundle.name.toLowerCase().includes(searchTerm) ||
-          bundle.description.toLowerCase().includes(searchTerm) ||
-          bundle.category.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      // Apply category filter
-      if (params?.category) {
-        filteredBundles = filteredBundles.filter(bundle => 
-          bundle.category.toLowerCase() === params.category!.toLowerCase()
-        );
-      }
-      
-      // Apply difficulty filter
-      if (params?.difficulty) {
-        filteredBundles = filteredBundles.filter(bundle => 
-          bundle.difficulty.toLowerCase() === params.difficulty!.toLowerCase()
-        );
-      }
-      
-      // Apply AI curated filter
-      if (params?.aiCurated) {
-        filteredBundles = filteredBundles.filter(bundle => bundle.aiCurated);
-      }
-      
-      // Apply sorting
-      if (params?.sortBy) {
-        switch (params.sortBy) {
-          case 'Popularity':
-            filteredBundles.sort((a, b) => b.deployments - a.deployments);
-            break;
-          case 'Recently Updated':
-            filteredBundles.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
-            break;
-          case 'Most Deployed':
-            filteredBundles.sort((a, b) => b.deployments - a.deployments);
-            break;
-          case 'Highest Rated':
-            filteredBundles.sort((a, b) => b.rating - a.rating);
-            break;
-        }
-      }
-      
-      // Apply pagination
-      const page = params?.page || 1;
-      const limit = params?.limit || 20;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedBundles = filteredBundles.slice(startIndex, endIndex);
-      
-      console.log(`✅ Client-side bundle filtering completed: ${filteredBundles.length} total, ${paginatedBundles.length} on page ${page}`);
+      console.log(`✅ Backend search completed: ${bundlesWithDefaults.length} items, page ${response.data.page}`);
       
       return {
-        items: paginatedBundles,
-        total: filteredBundles.length,
-        page: page,
-        limit: limit,
-        totalPages: Math.ceil(filteredBundles.length / limit)
+        ...response.data,
+        items: bundlesWithDefaults
       };
     } catch (error) {
-      console.error('❌ Error in client-side bundle filtering:', error);
+      console.error('❌ Error in backend bundle search:', error);
       return {
         items: [],
         total: 0,
@@ -126,46 +67,56 @@ export const bundleService = {
     }
   },
 
-  // Get a specific bundle by ID (fetch all pages if needed)
+  // Get a specific bundle by ID
   async getBundleById(id: string | number): Promise<Bundle | null> {
     console.log('🔍 Fetching bundle by ID:', id);
+    
     try {
-      let page = 1;
-      let found: Bundle | null = null;
-      let totalPages = 1;
-      do {
-        const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 100, page });
-        if (!response.success || !response.data) {
-          console.error('❌ Failed to fetch bundles:', response.error);
-          return null;
-        }
-        // Add missing fields with default values
-        const bundlesWithDefaults = response.data.items.map((bundle: any) => ({
-          ...bundle,
-          category: bundle.category || 'General',
-          tools: bundle.tools || [],
-          useCase: bundle.useCase || 'General purpose',
-          difficulty: bundle.difficulty || 'Intermediate',
-          estimatedTime: bundle.estimatedTime || '2-4 hours',
-          popularity: bundle.popularity || 0,
-          lastUpdated: bundle.lastUpdated || bundle.created_at || new Date().toISOString(),
-          aiCurated: bundle.aiCurated || false,
-          deployments: bundle.deployments || 0,
-          rating: bundle.rating || 4.0,
-          tags: bundle.tags || [],
-          author: bundle.author || 'Community',
-          featured: bundle.featured || false
-        }));
-        found = bundlesWithDefaults.find(b => b.id.toString() === id.toString()) || null;
-        totalPages = response.data.totalPages || 1;
-        page++;
-      } while (!found && page <= totalPages);
-      if (!found) {
+      // First try to use a proper backend endpoint for individual bundle
+      const response = await apiClient.get<Bundle>(`/api/bundles/${id}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Successfully found bundle via backend endpoint:', response.data.name);
+        return response.data;
+      }
+      
+      // Fallback: fetch all bundles and filter (since individual endpoint might not exist)
+      console.log('⚠️ Individual bundle endpoint not available, fetching all bundles...');
+      const allBundlesResponse = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 1000 });
+      
+      if (!allBundlesResponse.success || !allBundlesResponse.data) {
+        console.error('❌ Failed to fetch bundles:', allBundlesResponse.error);
+        return null;
+      }
+      
+      // Find the bundle by ID
+      const bundle = allBundlesResponse.data.items.find(b => b.id.toString() === id.toString());
+      
+      if (!bundle) {
         console.error('❌ Bundle not found with ID:', id);
         return null;
       }
-      console.log('✅ Successfully found bundle:', found.name);
-      return found;
+      
+      // Add missing fields with default values
+      const bundleWithDefaults = {
+        ...bundle,
+        category: bundle.category || 'General',
+        tools: bundle.tools || [],
+        useCase: bundle.useCase || 'General purpose',
+        difficulty: bundle.difficulty || 'Intermediate',
+        estimatedTime: bundle.estimatedTime || '2-4 hours',
+        popularity: bundle.popularity || 0,
+        lastUpdated: bundle.lastUpdated || (bundle as any).created_at || new Date().toISOString(),
+        aiCurated: bundle.aiCurated || false,
+        deployments: bundle.deployments || 0,
+        rating: bundle.rating || 4.0,
+        tags: bundle.tags || [],
+        author: bundle.author || 'Community',
+        featured: bundle.featured || false
+      };
+      
+      console.log('✅ Successfully found bundle via fallback:', bundleWithDefaults.name);
+      return bundleWithDefaults;
     } catch (error) {
       console.error('❌ Error fetching bundle by ID:', id, error);
       return null;
