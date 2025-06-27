@@ -12,11 +12,110 @@ export interface BundleSearchParams {
 }
 
 export const bundleService = {
-  // Get all bundles with optional filters
+  // Get all bundles with optional filters (client-side filtering since backend filtering is not working)
   async getBundles(params?: BundleSearchParams): Promise<PaginatedResponse<Bundle>> {
-    const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', params);
+    console.log('🔍 Fetching bundles with params:', params);
     
-    if (!response.success || !response.data) {
+    try {
+      // Fetch all bundles since backend filtering doesn't work
+      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 1000 });
+      
+      if (!response.success || !response.data) {
+        console.error('❌ Failed to fetch bundles:', response.error);
+        return {
+          items: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        };
+      }
+      
+      // Add missing fields with default values to match the Bundle type
+      const bundlesWithDefaults = response.data.items.map((bundle: any) => ({
+        ...bundle,
+        category: bundle.category || 'General',
+        tools: bundle.tools || [],
+        useCase: bundle.useCase || 'General purpose',
+        difficulty: bundle.difficulty || 'Intermediate',
+        estimatedTime: bundle.estimatedTime || '2-4 hours',
+        popularity: bundle.popularity || 0,
+        lastUpdated: bundle.lastUpdated || bundle.created_at || new Date().toISOString(),
+        aiCurated: bundle.aiCurated || false,
+        deployments: bundle.deployments || 0,
+        rating: bundle.rating || 4.0,
+        tags: bundle.tags || [],
+        author: bundle.author || 'Community',
+        featured: bundle.featured || false
+      }));
+      
+      let filteredBundles = bundlesWithDefaults;
+      
+      // Apply search query filter
+      if (params?.query) {
+        const searchTerm = params.query.toLowerCase();
+        filteredBundles = filteredBundles.filter(bundle => 
+          bundle.name.toLowerCase().includes(searchTerm) ||
+          bundle.description.toLowerCase().includes(searchTerm) ||
+          bundle.category.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply category filter
+      if (params?.category) {
+        filteredBundles = filteredBundles.filter(bundle => 
+          bundle.category.toLowerCase() === params.category!.toLowerCase()
+        );
+      }
+      
+      // Apply difficulty filter
+      if (params?.difficulty) {
+        filteredBundles = filteredBundles.filter(bundle => 
+          bundle.difficulty.toLowerCase() === params.difficulty!.toLowerCase()
+        );
+      }
+      
+      // Apply AI curated filter
+      if (params?.aiCurated) {
+        filteredBundles = filteredBundles.filter(bundle => bundle.aiCurated);
+      }
+      
+      // Apply sorting
+      if (params?.sortBy) {
+        switch (params.sortBy) {
+          case 'Popularity':
+            filteredBundles.sort((a, b) => b.deployments - a.deployments);
+            break;
+          case 'Recently Updated':
+            filteredBundles.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+            break;
+          case 'Most Deployed':
+            filteredBundles.sort((a, b) => b.deployments - a.deployments);
+            break;
+          case 'Highest Rated':
+            filteredBundles.sort((a, b) => b.rating - a.rating);
+            break;
+        }
+      }
+      
+      // Apply pagination
+      const page = params?.page || 1;
+      const limit = params?.limit || 20;
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedBundles = filteredBundles.slice(startIndex, endIndex);
+      
+      console.log(`✅ Client-side bundle filtering completed: ${filteredBundles.length} total, ${paginatedBundles.length} on page ${page}`);
+      
+      return {
+        items: paginatedBundles,
+        total: filteredBundles.length,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(filteredBundles.length / limit)
+      };
+    } catch (error) {
+      console.error('❌ Error in client-side bundle filtering:', error);
       return {
         items: [],
         total: 0,
@@ -25,8 +124,6 @@ export const bundleService = {
         totalPages: 0
       };
     }
-    
-    return response.data;
   },
 
   // Get a specific bundle by ID
@@ -58,18 +155,25 @@ export const bundleService = {
     }
   },
 
-  // Get featured bundles
+  // Get featured bundles (using main endpoint since featured endpoint doesn't exist)
   async getFeaturedBundles(): Promise<Bundle[]> {
-    const response = await apiClient.get<Bundle[]>('/api/bundles/featured');
-    
-    if (!response.success || !response.data) {
+    try {
+      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 4 });
+      
+      if (!response.success || !response.data) {
+        console.error('❌ Failed to fetch featured bundles:', response.error);
+        return [];
+      }
+      
+      console.log('✅ Successfully fetched featured bundles:', response.data.items.length);
+      return response.data.items;
+    } catch (error) {
+      console.error('❌ Error fetching featured bundles:', error);
       return [];
     }
-    
-    return response.data;
   },
 
-  // Search bundles
+  // Search bundles (client-side filtering since backend search is not working)
   async searchBundles(query: string, filters?: Omit<BundleSearchParams, 'query'>): Promise<PaginatedResponse<Bundle>> {
     const params = { query, ...filters };
     return this.getBundles(params);
