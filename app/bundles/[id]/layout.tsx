@@ -7,11 +7,16 @@ export async function generateStaticParams() {
     // Fetch all bundles to generate static paths
     const bundlesResponse: PaginatedResponse<Bundle> = await bundleService.getBundles({ limit: 1000 }); // Set a high limit to get all bundles
     
-    return bundlesResponse.items.map((bundle) => ({
-      id: bundle.id.toString(),
-    }));
+    // Ensure bundlesResponse.items is an array before mapping
+    if (bundlesResponse && Array.isArray(bundlesResponse.items)) {
+      return bundlesResponse.items.map((bundle) => ({
+        id: bundle.id.toString(),
+      }));
+    }
+    
+    // Return empty array if items is not an array
+    return [];
   } catch (error) {
-    console.error('Error generating static params:', error);
     // Return empty array if there's an error fetching bundles
     return [];
   }
