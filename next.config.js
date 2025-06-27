@@ -3,7 +3,6 @@ const nextConfig = {
   output: 'export',
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
-  distDir: 'out',
   optimizeFonts: false,
   eslint: {
     ignoreDuringBuilds: true,
@@ -24,10 +23,6 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
-  },
-  // Fix routing for static export
-  async generateStaticParams() {
-    return [];
   },
   webpack: (config, { isServer, dev }) => {
     // Use memory caching to prevent ENOENT errors with filesystem cache
