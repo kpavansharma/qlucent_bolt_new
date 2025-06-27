@@ -114,7 +114,7 @@ export default function VendorsPage() {
       </section>
 
       {/* Featured Vendors */}
-      {featuredVendors && featuredVendors.length > 0 && (
+      {!featuredError && featuredVendors && featuredVendors.length > 0 && (
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
