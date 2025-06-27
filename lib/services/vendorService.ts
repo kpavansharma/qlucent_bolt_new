@@ -134,15 +134,53 @@ export const vendorService = {
     }
   },
 
-  // Get a specific vendor by ID
+  // Get a specific vendor by ID (fetch all pages if needed)
   async getVendorById(id: string | number): Promise<Vendor | null> {
-    const response = await apiClient.get<Vendor>(`/api/vendors/${id}`);
-    
-    if (!response.success || !response.data) {
+    console.log('🔍 Fetching vendor by ID:', id);
+    try {
+      let page = 1;
+      let found: Vendor | null = null;
+      let totalPages = 1;
+      do {
+        const response = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', { limit: 100, page });
+        if (!response.success || !response.data) {
+          console.error('❌ Failed to fetch vendors:', response.error);
+          return null;
+        }
+        // Add missing fields with default values
+        const vendorsWithDefaults = response.data.items.map((vendor: any) => ({
+          ...vendor,
+          logo: vendor.logo || '',
+          rating: vendor.rating || 4.0,
+          reviews: vendor.reviews || 0,
+          location: vendor.location || 'Remote',
+          teamSize: vendor.teamSize || '5-15',
+          founded: vendor.founded || 2020,
+          specialties: vendor.specialties || [],
+          services: vendor.services || [],
+          pricing: vendor.pricing || 'Contact for pricing',
+          responseTime: vendor.responseTime || '24 hours',
+          successRate: vendor.successRate || 95,
+          verified: vendor.verified || false,
+          featured: vendor.featured || false,
+          certifications: vendor.certifications || [],
+          projects: vendor.projects || 0,
+          clients: vendor.clients || []
+        }));
+        found = vendorsWithDefaults.find(v => v.id.toString() === id.toString()) || null;
+        totalPages = response.data.totalPages || 1;
+        page++;
+      } while (!found && page <= totalPages);
+      if (!found) {
+        console.error('❌ Vendor not found with ID:', id);
+        return null;
+      }
+      console.log('✅ Successfully found vendor:', found.name);
+      return found;
+    } catch (error) {
+      console.error('❌ Error fetching vendor by ID:', id, error);
       return null;
     }
-    
-    return response.data;
   },
 
   // Get featured vendors (using main endpoint since featured endpoint doesn't exist)
