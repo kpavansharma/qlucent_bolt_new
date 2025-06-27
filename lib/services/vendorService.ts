@@ -13,16 +13,16 @@ export interface VendorSearchParams {
 }
 
 export const vendorService = {
-  // Get all vendors with optional filters (client-side filtering since backend filtering is not working)
+  // Get all vendors with optional filters (use backend search)
   async getVendors(params?: VendorSearchParams): Promise<PaginatedResponse<Vendor>> {
-    console.log('🔍 Fetching vendors with params:', params);
+    console.log('🔍 Fetching vendors with backend search:', params);
     
     try {
-      // Fetch all vendors since backend filtering doesn't work
-      const response = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', { limit: 1000 });
+      // Use backend search with proper parameters
+      const response = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', params);
       
       if (!response.success || !response.data) {
-        console.error('❌ Failed to fetch vendors:', response.error);
+        console.error('❌ Failed to fetch vendors from backend:', response.error);
         return {
           items: [],
           total: 0,
@@ -53,77 +53,14 @@ export const vendorService = {
         clients: vendor.clients || []
       }));
       
-      let filteredVendors = vendorsWithDefaults;
-      
-      // Apply search query filter
-      if (params?.query) {
-        const searchTerm = params.query.toLowerCase();
-        filteredVendors = filteredVendors.filter(vendor => 
-          vendor.name.toLowerCase().includes(searchTerm) ||
-          vendor.description.toLowerCase().includes(searchTerm) ||
-          vendor.specialties.some((specialty: string) => specialty.toLowerCase().includes(searchTerm))
-        );
-      }
-      
-      // Apply specialty filter
-      if (params?.specialty) {
-        filteredVendors = filteredVendors.filter(vendor => 
-          vendor.specialties.some((specialty: string) => specialty.toLowerCase() === params.specialty!.toLowerCase())
-        );
-      }
-      
-      // Apply service filter
-      if (params?.service) {
-        filteredVendors = filteredVendors.filter(vendor => 
-          vendor.services.some((service: string) => service.toLowerCase() === params.service!.toLowerCase())
-        );
-      }
-      
-      // Apply team size filter
-      if (params?.teamSize) {
-        filteredVendors = filteredVendors.filter(vendor => 
-          vendor.teamSize.toLowerCase() === params.teamSize!.toLowerCase()
-        );
-      }
-      
-      // Apply verified filter
-      if (params?.verified) {
-        filteredVendors = filteredVendors.filter(vendor => vendor.verified);
-      }
-      
-      // Apply sorting
-      if (params?.sortBy) {
-        switch (params.sortBy) {
-          case 'rating':
-            filteredVendors.sort((a, b) => b.rating - a.rating);
-            break;
-          case 'projects':
-            filteredVendors.sort((a, b) => b.projects - a.projects);
-            break;
-          case 'name':
-            filteredVendors.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-        }
-      }
-      
-      // Apply pagination
-      const page = params?.page || 1;
-      const limit = params?.limit || 20;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedVendors = filteredVendors.slice(startIndex, endIndex);
-      
-      console.log(`✅ Client-side vendor filtering completed: ${filteredVendors.length} total, ${paginatedVendors.length} on page ${page}`);
+      console.log(`✅ Backend search completed: ${vendorsWithDefaults.length} items, page ${response.data.page}`);
       
       return {
-        items: paginatedVendors,
-        total: filteredVendors.length,
-        page: page,
-        limit: limit,
-        totalPages: Math.ceil(filteredVendors.length / limit)
+        ...response.data,
+        items: vendorsWithDefaults
       };
     } catch (error) {
-      console.error('❌ Error in client-side vendor filtering:', error);
+      console.error('❌ Error in backend vendor search:', error);
       return {
         items: [],
         total: 0,
@@ -134,49 +71,59 @@ export const vendorService = {
     }
   },
 
-  // Get a specific vendor by ID (fetch all pages if needed)
+  // Get a specific vendor by ID
   async getVendorById(id: string | number): Promise<Vendor | null> {
     console.log('🔍 Fetching vendor by ID:', id);
+    
     try {
-      let page = 1;
-      let found: Vendor | null = null;
-      let totalPages = 1;
-      do {
-        const response = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', { limit: 100, page });
-        if (!response.success || !response.data) {
-          console.error('❌ Failed to fetch vendors:', response.error);
-          return null;
-        }
-        // Add missing fields with default values
-        const vendorsWithDefaults = response.data.items.map((vendor: any) => ({
-          ...vendor,
-          logo: vendor.logo || '',
-          rating: vendor.rating || 4.0,
-          reviews: vendor.reviews || 0,
-          location: vendor.location || 'Remote',
-          teamSize: vendor.teamSize || '5-15',
-          founded: vendor.founded || 2020,
-          specialties: vendor.specialties || [],
-          services: vendor.services || [],
-          pricing: vendor.pricing || 'Contact for pricing',
-          responseTime: vendor.responseTime || '24 hours',
-          successRate: vendor.successRate || 95,
-          verified: vendor.verified || false,
-          featured: vendor.featured || false,
-          certifications: vendor.certifications || [],
-          projects: vendor.projects || 0,
-          clients: vendor.clients || []
-        }));
-        found = vendorsWithDefaults.find(v => v.id.toString() === id.toString()) || null;
-        totalPages = response.data.totalPages || 1;
-        page++;
-      } while (!found && page <= totalPages);
-      if (!found) {
+      // First try to use a proper backend endpoint for individual vendor
+      const response = await apiClient.get<Vendor>(`/api/vendors/${id}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Successfully found vendor via backend endpoint:', response.data.name);
+        return response.data;
+      }
+      
+      // Fallback: fetch all vendors and filter (since individual endpoint might not exist)
+      console.log('⚠️ Individual vendor endpoint not available, fetching all vendors...');
+      const allVendorsResponse = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', { limit: 1000 });
+      
+      if (!allVendorsResponse.success || !allVendorsResponse.data) {
+        console.error('❌ Failed to fetch vendors:', allVendorsResponse.error);
+        return null;
+      }
+      
+      // Find the vendor by ID
+      const vendor = allVendorsResponse.data.items.find(v => v.id.toString() === id.toString());
+      
+      if (!vendor) {
         console.error('❌ Vendor not found with ID:', id);
         return null;
       }
-      console.log('✅ Successfully found vendor:', found.name);
-      return found;
+      
+      // Add missing fields with default values
+      const vendorWithDefaults = {
+        ...vendor,
+        logo: vendor.logo || '',
+        rating: vendor.rating || 4.0,
+        reviews: vendor.reviews || 0,
+        location: vendor.location || 'Remote',
+        teamSize: vendor.teamSize || '5-15',
+        founded: vendor.founded || 2020,
+        specialties: vendor.specialties || [],
+        services: vendor.services || [],
+        pricing: vendor.pricing || 'Contact for pricing',
+        responseTime: vendor.responseTime || '24 hours',
+        successRate: vendor.successRate || 95,
+        verified: vendor.verified || false,
+        featured: vendor.featured || false,
+        certifications: vendor.certifications || [],
+        projects: vendor.projects || 0,
+        clients: vendor.clients || []
+      };
+      
+      console.log('✅ Successfully found vendor via fallback:', vendorWithDefaults.name);
+      return vendorWithDefaults;
     } catch (error) {
       console.error('❌ Error fetching vendor by ID:', id, error);
       return null;
@@ -222,10 +169,63 @@ export const vendorService = {
     }
   },
 
-  // Search vendors
+  // Search vendors with query (use backend search)
   async searchVendors(query: string, filters?: Omit<VendorSearchParams, 'query'>): Promise<PaginatedResponse<Vendor>> {
-    const params = { query, ...filters };
-    return this.getVendors(params);
+    console.log('🔍 Performing backend search for vendors:', query, filters);
+    
+    try {
+      // Use backend search with query and filters
+      const searchParams = { query, ...filters };
+      const response = await apiClient.get<PaginatedResponse<Vendor>>('/api/vendors', searchParams);
+      
+      if (!response.success || !response.data) {
+        console.error('❌ Failed to search vendors from backend:', response.error);
+        return {
+          items: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        };
+      }
+      
+      // Add missing fields with default values
+      const vendorsWithDefaults = response.data.items.map((vendor: any) => ({
+        ...vendor,
+        logo: vendor.logo || '',
+        rating: vendor.rating || 4.0,
+        reviews: vendor.reviews || 0,
+        location: vendor.location || 'Remote',
+        teamSize: vendor.teamSize || '5-15',
+        founded: vendor.founded || 2020,
+        specialties: vendor.specialties || [],
+        services: vendor.services || [],
+        pricing: vendor.pricing || 'Contact for pricing',
+        responseTime: vendor.responseTime || '24 hours',
+        successRate: vendor.successRate || 95,
+        verified: vendor.verified || false,
+        featured: vendor.featured || false,
+        certifications: vendor.certifications || [],
+        projects: vendor.projects || 0,
+        clients: vendor.clients || []
+      }));
+      
+      console.log(`✅ Backend vendor search completed: ${vendorsWithDefaults.length} items for query "${query}"`);
+      
+      return {
+        ...response.data,
+        items: vendorsWithDefaults
+      };
+    } catch (error) {
+      console.error('❌ Error in backend vendor search:', error);
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      };
+    }
   },
 
   // Get vendors by specialty
