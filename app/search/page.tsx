@@ -13,6 +13,7 @@ import { toolService, ToolSearchParams } from '@/lib/services/toolService';
 import { Tool } from '@/lib/types/api';
 import { useApi } from '@/lib/hooks/useApi';
 import { useSearchParams } from 'next/navigation';
+import { Navigation } from '@/components/navigation';
 import Link from 'next/link';
 
 const categories = ['All', 'DevOps', 'AI/ML', 'Frontend', 'Backend', 'Database', 'Security', 'Monitoring'];
@@ -71,7 +72,7 @@ export default function SearchPage() {
   }, [initialQuery, initialCategory]);
 
   const ToolCard = ({ tool }: { tool: Tool }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer">
+    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer bg-background border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg group-hover:text-purple-600 transition-colors flex items-center gap-2">
@@ -90,11 +91,11 @@ export default function SearchPage() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <CardDescription className="text-sm leading-relaxed">
+        <CardDescription className="text-sm leading-relaxed text-muted-foreground">
           {tool.description}
         </CardDescription>
         
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
             <div className="flex items-center">
               <Star className="w-4 h-4 mr-1 text-yellow-500" />
@@ -105,7 +106,7 @@ export default function SearchPage() {
               {tool.downloads}
             </div>
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-muted-foreground">
             Updated {new Date(tool.lastUpdated).toLocaleDateString()}
           </div>
         </div>
@@ -142,7 +143,7 @@ export default function SearchPage() {
   );
 
   const ToolListItem = ({ tool }: { tool: Tool }) => (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer bg-background border-border">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
@@ -155,8 +156,8 @@ export default function SearchPage() {
               {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Verified</Badge>}
               <Badge variant="outline" className="text-xs">{tool.aiScore}% AI Match</Badge>
             </div>
-            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{tool.description}</p>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <p className="text-muted-foreground text-sm mb-2 line-clamp-2">{tool.description}</p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Badge variant="outline">{tool.category}</Badge>
               <div className="flex items-center">
                 <Star className="w-4 h-4 mr-1 text-yellow-500" />
@@ -189,61 +190,14 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Qlucent.ai
-              </span>
-            </Link>
-            
-            <div className="flex-1 max-w-2xl mx-8">
-              <div className="relative">
-                <label htmlFor="search-input" className="sr-only">Search tools, frameworks, or describe your needs</label>
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  id="search-input"
-                  name="search"
-                  type="text"
-                  placeholder="Search tools, frameworks, or describe your needs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-background">
+      <Navigation currentPage="search" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <div className="w-64 space-y-6">
-            <Card>
+            <Card className="bg-background border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Filter className="w-5 h-5" />
@@ -320,8 +274,8 @@ export default function SearchPage() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
-                <p className="text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Search Results</h1>
+                <p className="text-muted-foreground">
                   {loading ? 'Searching...' : `Found ${toolsResponse?.total || 0} tools`}
                   {searchQuery && ` for "${searchQuery}"`}
                 </p>
@@ -344,17 +298,17 @@ export default function SearchPage() {
             {loading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                <span className="ml-2 text-gray-600">Loading tools...</span>
+                <span className="ml-2 text-muted-foreground">Loading tools...</span>
               </div>
             )}
 
             {/* Error State */}
             {error && (
-              <Card className="p-12 text-center">
+              <Card className="p-12 text-center bg-background border-border">
                 <div className="text-red-400 mb-4">
                   <Search className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading tools</h3>
-                  <p className="text-gray-600 mb-4">{error}</p>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Error loading tools</h3>
+                  <p className="text-muted-foreground mb-4">{error}</p>
                   <Button onClick={refetch}>Try Again</Button>
                 </div>
               </Card>
@@ -362,10 +316,10 @@ export default function SearchPage() {
 
             {/* No Results */}
             {!loading && !error && tools.length === 0 && (
-              <Card className="p-12 text-center">
-                <div className="text-gray-400">
+              <Card className="p-12 text-center bg-background border-border">
+                <div className="text-muted-foreground">
                   <Search className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No tools found</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">No tools found</h3>
                   <p>Try adjusting your search criteria or filters</p>
                 </div>
               </Card>
@@ -403,7 +357,7 @@ export default function SearchPage() {
                         return (
                           <Button
                             key={page}
-                            variant={currentPage === page ? 'default' : 'outline'}
+                            variant={currentPage === page ? "default" : "outline"}
                             size="sm"
                             onClick={() => setCurrentPage(page)}
                           >
