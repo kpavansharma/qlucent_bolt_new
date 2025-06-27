@@ -31,13 +31,31 @@ export const bundleService = {
 
   // Get a specific bundle by ID
   async getBundleById(id: string | number): Promise<Bundle | null> {
-    const response = await apiClient.get<Bundle>(`/api/bundles/${id}`);
+    console.log('🔍 Fetching bundle by ID:', id);
     
-    if (!response.success || !response.data) {
+    try {
+      // Since individual bundle endpoint doesn't exist, fetch all bundles and filter
+      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 1000 });
+      
+      if (!response.success || !response.data) {
+        console.error('❌ Failed to fetch bundles:', response.error);
+        return null;
+      }
+      
+      // Find the bundle by ID
+      const bundle = response.data.items.find(b => b.id.toString() === id.toString());
+      
+      if (!bundle) {
+        console.error('❌ Bundle not found with ID:', id);
+        return null;
+      }
+      
+      console.log('✅ Successfully found bundle:', bundle.name);
+      return bundle;
+    } catch (error) {
+      console.error('❌ Error fetching bundle by ID:', id, error);
       return null;
     }
-    
-    return response.data;
   },
 
   // Get featured bundles
