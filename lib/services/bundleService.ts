@@ -126,29 +126,46 @@ export const bundleService = {
     }
   },
 
-  // Get a specific bundle by ID
+  // Get a specific bundle by ID (fetch all pages if needed)
   async getBundleById(id: string | number): Promise<Bundle | null> {
     console.log('🔍 Fetching bundle by ID:', id);
-    
     try {
-      // Since individual bundle endpoint doesn't exist, fetch all bundles and filter
-      const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 1000 });
-      
-      if (!response.success || !response.data) {
-        console.error('❌ Failed to fetch bundles:', response.error);
-        return null;
-      }
-      
-      // Find the bundle by ID
-      const bundle = response.data.items.find(b => b.id.toString() === id.toString());
-      
-      if (!bundle) {
+      let page = 1;
+      let found: Bundle | null = null;
+      let totalPages = 1;
+      do {
+        const response = await apiClient.get<PaginatedResponse<Bundle>>('/api/bundles', { limit: 100, page });
+        if (!response.success || !response.data) {
+          console.error('❌ Failed to fetch bundles:', response.error);
+          return null;
+        }
+        // Add missing fields with default values
+        const bundlesWithDefaults = response.data.items.map((bundle: any) => ({
+          ...bundle,
+          category: bundle.category || 'General',
+          tools: bundle.tools || [],
+          useCase: bundle.useCase || 'General purpose',
+          difficulty: bundle.difficulty || 'Intermediate',
+          estimatedTime: bundle.estimatedTime || '2-4 hours',
+          popularity: bundle.popularity || 0,
+          lastUpdated: bundle.lastUpdated || bundle.created_at || new Date().toISOString(),
+          aiCurated: bundle.aiCurated || false,
+          deployments: bundle.deployments || 0,
+          rating: bundle.rating || 4.0,
+          tags: bundle.tags || [],
+          author: bundle.author || 'Community',
+          featured: bundle.featured || false
+        }));
+        found = bundlesWithDefaults.find(b => b.id.toString() === id.toString()) || null;
+        totalPages = response.data.totalPages || 1;
+        page++;
+      } while (!found && page <= totalPages);
+      if (!found) {
         console.error('❌ Bundle not found with ID:', id);
         return null;
       }
-      
-      console.log('✅ Successfully found bundle:', bundle.name);
-      return bundle;
+      console.log('✅ Successfully found bundle:', found.name);
+      return found;
     } catch (error) {
       console.error('❌ Error fetching bundle by ID:', id, error);
       return null;
