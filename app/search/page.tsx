@@ -46,9 +46,9 @@ export default function SearchPage() {
     limit: 12
   };
 
-  // Fetch tools from backend
+  // Fetch tools from backend using client-side search
   const { data: toolsResponse, loading, error, refetch } = useApi(
-    () => toolService.getTools(toolSearchParams),
+    () => searchQuery ? toolService.searchTools(searchQuery, toolSearchParams) : toolService.getTools(toolSearchParams),
     [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
   );
 
