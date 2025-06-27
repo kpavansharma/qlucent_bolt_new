@@ -14,63 +14,16 @@ export interface ToolSearchParams extends SearchFilters {
 }
 
 export const toolService = {
-  // Get all tools with optional filters
+  // Get all tools with optional filters (use backend search)
   async getTools(params?: ToolSearchParams): Promise<PaginatedResponse<Tool>> {
-    const response = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', params);
-    
-    if (!response.success || !response.data) {
-      // Return fallback data if API fails
-      return {
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0
-      };
-    }
-    
-    return response.data;
-  },
-
-  // Get a specific tool by ID
-  async getToolById(id: string | number): Promise<Tool | null> {
-    console.log('🔍 Fetching tool by ID:', id);
+    console.log('🔍 Fetching tools with backend search:', params);
     
     try {
-      // Since individual tool endpoint doesn't exist, fetch all tools and filter
-      const response = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', { limit: 1000 });
+      // Use backend search with proper parameters
+      const response = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', params);
       
       if (!response.success || !response.data) {
-        console.error('❌ Failed to fetch tools:', response.error);
-        return null;
-      }
-      
-      // Find the tool by ID
-      const tool = response.data.items.find(t => t.id.toString() === id.toString());
-      
-      if (!tool) {
-        console.error('❌ Tool not found with ID:', id);
-        return null;
-      }
-      
-      console.log('✅ Successfully found tool:', tool.name);
-      return tool;
-    } catch (error) {
-      console.error('❌ Error fetching tool by ID:', id, error);
-      return null;
-    }
-  },
-
-  // Search tools with query (client-side filtering since backend search is not working)
-  async searchTools(query: string, filters?: Omit<ToolSearchParams, 'query'>): Promise<PaginatedResponse<Tool>> {
-    console.log('🔍 Performing client-side search for:', query, filters);
-    
-    try {
-      // Fetch all tools since backend search doesn't work
-      const response = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', { limit: 1000 });
-      
-      if (!response.success || !response.data) {
-        console.error('❌ Failed to fetch tools for search:', response.error);
+        console.error('❌ Failed to fetch tools from backend:', response.error);
         return {
           items: [],
           total: 0,
@@ -80,84 +33,82 @@ export const toolService = {
         };
       }
       
-      let filteredTools = response.data.items;
-      
-      // Apply search query filter
-      if (query) {
-        const searchTerm = query.toLowerCase();
-        filteredTools = filteredTools.filter(tool => 
-          tool.name.toLowerCase().includes(searchTerm) ||
-          tool.description.toLowerCase().includes(searchTerm) ||
-          tool.category.toLowerCase().includes(searchTerm) ||
-          tool.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-        );
-      }
-      
-      // Apply category filter
-      if (filters?.category) {
-        filteredTools = filteredTools.filter(tool => 
-          tool.category.toLowerCase() === filters.category!.toLowerCase()
-        );
-      }
-      
-      // Apply license filter
-      if (filters?.license) {
-        filteredTools = filteredTools.filter(tool => 
-          tool.license.toLowerCase() === filters.license!.toLowerCase()
-        );
-      }
-      
-      // Apply min stars filter
-      if (filters?.minStars) {
-        filteredTools = filteredTools.filter(tool => tool.stars >= filters.minStars!);
-      }
-      
-      // Apply verified filter
-      if (filters?.verified) {
-        filteredTools = filteredTools.filter(tool => tool.verified);
-      }
-      
-      // Apply deployment ready filter
-      if (filters?.deploymentReady) {
-        filteredTools = filteredTools.filter(tool => tool.deploymentReady);
-      }
-      
-      // Apply sorting
-      if (filters?.sortBy) {
-        switch (filters.sortBy) {
-          case 'stars':
-            filteredTools.sort((a, b) => b.stars - a.stars);
-            break;
-          case 'downloads':
-            filteredTools.sort((a, b) => b.downloads.localeCompare(a.downloads));
-            break;
-          case 'name':
-            filteredTools.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-          case 'updated':
-            filteredTools.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
-            break;
-        }
-      }
-      
-      // Apply pagination
-      const page = filters?.page || 1;
-      const limit = filters?.limit || 12;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedTools = filteredTools.slice(startIndex, endIndex);
-      
-      console.log(`✅ Client-side search completed: ${filteredTools.length} total, ${paginatedTools.length} on page ${page}`);
-      
-      return {
-        items: paginatedTools,
-        total: filteredTools.length,
-        page: page,
-        limit: limit,
-        totalPages: Math.ceil(filteredTools.length / limit)
-      };
+      console.log(`✅ Backend search completed: ${response.data.items.length} items, page ${response.data.page}`);
+      return response.data;
     } catch (error) {
-      console.error('❌ Error in client-side search:', error);
+      console.error('❌ Error in backend tool search:', error);
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      };
+    }
+  },
+
+  // Get a specific tool by ID
+  async getToolById(id: string | number): Promise<Tool | null> {
+    console.log('🔍 Fetching tool by ID:', id);
+    
+    try {
+      // First try to use a proper backend endpoint for individual tool
+      const response = await apiClient.get<Tool>(`/api/tools/${id}`);
+      
+      if (response.success && response.data) {
+        console.log('✅ Successfully found tool via backend endpoint:', response.data.name);
+        return response.data;
+      }
+      
+      // Fallback: fetch all tools and filter (since individual endpoint might not exist)
+      console.log('⚠️ Individual tool endpoint not available, fetching all tools...');
+      const allToolsResponse = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', { limit: 1000 });
+      
+      if (!allToolsResponse.success || !allToolsResponse.data) {
+        console.error('❌ Failed to fetch tools:', allToolsResponse.error);
+        return null;
+      }
+      
+      // Find the tool by ID
+      const tool = allToolsResponse.data.items.find(t => t.id.toString() === id.toString());
+      
+      if (!tool) {
+        console.error('❌ Tool not found with ID:', id);
+        return null;
+      }
+      
+      console.log('✅ Successfully found tool via fallback:', tool.name);
+      return tool;
+    } catch (error) {
+      console.error('❌ Error fetching tool by ID:', id, error);
+      return null;
+    }
+  },
+
+  // Search tools with query (use backend search)
+  async searchTools(query: string, filters?: Omit<ToolSearchParams, 'query'>): Promise<PaginatedResponse<Tool>> {
+    console.log('🔍 Performing backend search for:', query, filters);
+    
+    try {
+      // Use backend search with query and filters
+      const searchParams = { query, ...filters };
+      const response = await apiClient.get<PaginatedResponse<Tool>>('/api/tools', searchParams);
+      
+      if (!response.success || !response.data) {
+        console.error('❌ Failed to search tools from backend:', response.error);
+        return {
+          items: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        };
+      }
+      
+      console.log(`✅ Backend search completed: ${response.data.items.length} items for query "${query}"`);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error in backend tool search:', error);
       return {
         items: [],
         total: 0,
