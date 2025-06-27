@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Star, Users, Briefcase, MapPin, Award, Loader2, AlertCircle, MessageCircle, ArrowLeft } from "lucide-react";
+import { Navigation } from "@/components/navigation";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -23,11 +24,11 @@ export default function VendorDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="p-8 text-center bg-background border-border">
           <Loader2 className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
-          <h2 className="text-xl font-semibold mb-2">Loading Vendor Details</h2>
-          <p className="text-gray-600 dark:text-gray-300">Please wait while we fetch the vendor information...</p>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Loading Vendor Details</h2>
+          <p className="text-muted-foreground">Please wait while we fetch the vendor information...</p>
         </Card>
       </div>
     );
@@ -35,11 +36,11 @@ export default function VendorDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="p-8 text-center bg-background border-border">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error Loading Vendor</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Error Loading Vendor</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <Button asChild>
             <Link href="/vendors">Back to Vendors</Link>
           </Button>
@@ -50,11 +51,11 @@ export default function VendorDetailPage() {
 
   if (!vendor) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Vendor Not Found</h2>
-          <p className="text-gray-600 mb-4">The vendor you're looking for doesn't exist.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="p-8 text-center bg-background border-border">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Vendor Not Found</h2>
+          <p className="text-muted-foreground mb-4">The vendor you're looking for doesn't exist.</p>
           <Button asChild>
             <Link href="/vendors">Back to Vendors</Link>
           </Button>
@@ -64,9 +65,11 @@ export default function VendorDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
-      <div className="bg-white dark:bg-zinc-900 border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
+    <div className="min-h-screen bg-background">
+      <Navigation currentPage="vendors" />
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/vendors">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -80,7 +83,7 @@ export default function VendorDetailPage() {
                 {vendor.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">{vendor.name}</span>
+            <span className="text-2xl font-bold text-foreground">{vendor.name}</span>
             {vendor.verified && (
               <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
                 Verified
@@ -94,17 +97,16 @@ export default function VendorDetailPage() {
             )}
           </div>
         </div>
-      </div>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
+        
+        <Card className="bg-background border-border">
           <CardHeader>
-            <CardTitle className="text-2xl mb-2">{vendor.name}</CardTitle>
-            <CardDescription className="text-base text-gray-600 dark:text-gray-300">
+            <CardTitle className="text-2xl mb-2 text-foreground">{vendor.name}</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               {vendor.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300">
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-500" />
                 {vendor.rating} ({vendor.reviews} reviews)
@@ -131,7 +133,7 @@ export default function VendorDetailPage() {
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Specialties:</p>
+              <p className="text-sm font-medium text-foreground mb-2">Specialties:</p>
               <div className="flex flex-wrap gap-1">
                 {(vendor.specialties || []).map((specialty) => (
                   <Badge key={specialty} variant="secondary" className="text-xs">
@@ -141,7 +143,7 @@ export default function VendorDetailPage() {
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Services:</p>
+              <p className="text-sm font-medium text-foreground mb-2">Services:</p>
               <div className="flex flex-wrap gap-1">
                 {(vendor.services || []).map((service) => (
                   <Badge key={service} variant="outline" className="text-xs">
