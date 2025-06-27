@@ -11,6 +11,13 @@ import { Star, Users, Briefcase, MapPin, Award, Loader2, AlertCircle, MessageCir
 import Link from "next/link";
 import { useState } from "react";
 
+// Generate static params for all vendors
+export async function generateStaticParams() {
+  // Return empty array to avoid API calls during build time
+  // Data will be fetched on the client side
+  return [];
+}
+
 export default function VendorDetailPage() {
   const params = useParams();
   const vendorId = params.id as string;
