@@ -8,10 +8,10 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf out && next build && next export",
+    "build": "rimraf out && next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next build && next export"
+    "export": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -72,5 +72,8 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
   }
 }
