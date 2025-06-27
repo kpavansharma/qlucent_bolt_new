@@ -13,54 +13,54 @@
   to = "/index.html"
   status = 200
 
-# Specific redirects for app routes
+# Specific redirects for app routes - Next.js app router creates index.html in each directory
 [[redirects]]
-  from = "/auth"
+  from = "/auth/"
   to = "/auth/index.html"
   status = 200
 
 [[redirects]]
-  from = "/dashboard"
+  from = "/dashboard/"
   to = "/dashboard/index.html"
   status = 200
 
 [[redirects]]
-  from = "/search"
+  from = "/search/"
   to = "/search/index.html"
   status = 200
 
 [[redirects]]
-  from = "/bundles"
+  from = "/bundles/"
   to = "/bundles/index.html"
   status = 200
 
 [[redirects]]
-  from = "/vendors"
+  from = "/vendors/"
   to = "/vendors/index.html"
   status = 200
 
 [[redirects]]
-  from = "/deploy"
+  from = "/deploy/"
   to = "/deploy/index.html"
   status = 200
 
 [[redirects]]
-  from = "/portfolios"
+  from = "/portfolios/"
   to = "/portfolios/index.html"
   status = 200
 
 [[redirects]]
-  from = "/forgot-password"
+  from = "/forgot-password/"
   to = "/forgot-password/index.html"
   status = 200
 
 [[redirects]]
-  from = "/reset-password"
+  from = "/reset-password/"
   to = "/reset-password/index.html"
   status = 200
 
 [[redirects]]
-  from = "/tools/*"
+  from = "/tools/*/"
   to = "/tools/[id]/index.html"
   status = 200
 
