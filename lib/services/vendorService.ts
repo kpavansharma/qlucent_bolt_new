@@ -73,16 +73,19 @@ export const vendorService = {
 
   // Get a specific vendor by ID
   async getVendorById(id: string | number): Promise<Vendor | null> {
-    console.log('🔍 Fetching vendor by ID:', id);
+    console.log('🔍 Fetching vendor by ID:', id, 'Type:', typeof id);
     
     try {
       // First try to use a proper backend endpoint for individual vendor
+      console.log('🔍 Trying backend endpoint first...');
       const response = await apiClient.get<Vendor>(`/api/vendors/${id}`);
       
       if (response.success && response.data) {
         console.log('✅ Successfully found vendor via backend endpoint:', response.data.name);
         return response.data;
       }
+      
+      console.log('⚠️ Backend endpoint failed, trying fallback...');
       
       // Fallback: fetch all vendors and filter (since individual endpoint might not exist)
       console.log('⚠️ Individual vendor endpoint not available, fetching all vendors...');
@@ -93,11 +96,17 @@ export const vendorService = {
         return null;
       }
       
+      console.log(`📊 Fetched ${allVendorsResponse.data.items.length} vendors, searching for ID: ${id}`);
+      
       // Find the vendor by ID
-      const vendor = allVendorsResponse.data.items.find(v => v.id.toString() === id.toString());
+      const vendor = allVendorsResponse.data.items.find(v => {
+        console.log(`🔍 Comparing vendor ID: ${v.id} (${typeof v.id}) with search ID: ${id} (${typeof id})`);
+        return v.id.toString() === id.toString();
+      });
       
       if (!vendor) {
         console.error('❌ Vendor not found with ID:', id);
+        console.log('📋 Available vendor IDs:', allVendorsResponse.data.items.map(v => v.id));
         return null;
       }
       
