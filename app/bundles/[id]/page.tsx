@@ -12,6 +12,7 @@ import { useParams } from 'next/navigation';
 import { bundleService } from '@/lib/services/bundleService';
 import { useApi } from '@/lib/hooks/useApi';
 import { Bundle, PaginatedResponse } from '@/lib/types/api';
+import { Navigation } from '@/components/navigation';
 
 export default function BundleDetailPage() {
   const params = useParams();
@@ -28,11 +29,11 @@ export default function BundleDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center bg-card border-border">
           <Loader2 className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
-          <h2 className="text-xl font-semibold mb-2">Loading Bundle Details</h2>
-          <p className="text-gray-600">Please wait while we fetch the bundle information...</p>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Loading Bundle Details</h2>
+          <p className="text-muted-foreground">Please wait while we fetch the bundle information...</p>
         </Card>
       </div>
     );
@@ -41,11 +42,11 @@ export default function BundleDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center bg-card border-border">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error Loading Bundle</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Error Loading Bundle</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <div className="flex gap-2 justify-center">
             <Button asChild>
               <Link href="/bundles">Back to Bundles</Link>
@@ -62,11 +63,11 @@ export default function BundleDetailPage() {
   // Bundle not found
   if (!bundle) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Bundle Not Found</h2>
-          <p className="text-gray-600 mb-4">The bundle you're looking for doesn't exist.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center bg-card border-border">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2 text-foreground">Bundle Not Found</h2>
+          <p className="text-muted-foreground mb-4">The bundle you're looking for doesn't exist.</p>
           <Button asChild>
             <Link href="/bundles">Back to Bundles</Link>
           </Button>
@@ -77,17 +78,19 @@ export default function BundleDetailPage() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Beginner': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'Advanced': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
+      <Navigation currentPage="bundles" />
+      
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -102,9 +105,9 @@ export default function BundleDetailPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
                   <Package className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-900">{bundle.name}</span>
+                <span className="text-xl font-bold text-foreground">{bundle.name}</span>
                 {bundle.aiCurated && (
-                  <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                     <Award className="w-3 h-3 mr-1" />
                     AI Curated
                   </Badge>
@@ -117,7 +120,7 @@ export default function BundleDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFavorited(!isFavorited)}
-                className={isFavorited ? 'text-red-600 border-red-600' : ''}
+                className={isFavorited ? 'text-red-600 border-red-600 dark:text-red-400 dark:border-red-400' : ''}
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorited ? 'fill-current' : ''}`} />
                 {isFavorited ? 'Favorited' : 'Favorite'}
@@ -141,12 +144,12 @@ export default function BundleDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <Card>
+            <Card className="bg-card border-border">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-2xl mb-2">{bundle.name}</CardTitle>
-                    <CardDescription className="text-base leading-relaxed">
+                    <CardTitle className="text-2xl mb-2 text-foreground">{bundle.name}</CardTitle>
+                    <CardDescription className="text-base leading-relaxed text-muted-foreground">
                       {bundle.description}
                     </CardDescription>
                   </div>
@@ -160,7 +163,7 @@ export default function BundleDetailPage() {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-6 text-sm text-gray-600 pt-4">
+                <div className="flex items-center space-x-6 text-sm text-muted-foreground pt-4">
                   <div className="flex items-center">
                     <Star className="w-4 h-4 mr-1 text-yellow-500" />
                     {bundle.rating} rating
@@ -198,76 +201,45 @@ export default function BundleDetailPage() {
                 </TabsList>
 
                 <TabsContent value="overview" className="mt-6">
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Use Case</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-gray-700">{bundle.useCase}</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Bundle Information</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Category:</span>
-                            <div className="font-medium">{bundle.category}</div>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Difficulty:</span>
-                            <div className="font-medium">{bundle.difficulty}</div>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Estimated Time:</span>
-                            <div className="font-medium">{bundle.estimatedTime}</div>
-                          </div>
-                          <div>
-                            <span className="text-sm font-medium text-gray-700">Author:</span>
-                            <div className="font-medium">{bundle.author}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <span className="text-sm font-medium text-gray-700">AI Curated:</span>
-                          {bundle.aiCurated ? (
-                            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                              <Award className="w-3 h-3 mr-1" />
-                              Yes
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                              No
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <Card className="bg-card border-border">
+                    <CardHeader>
+                      <CardTitle className="text-foreground">Bundle Overview</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-medium text-foreground mb-2">Use Case</h4>
+                        <p className="text-muted-foreground">{bundle.useCase}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground mb-2">Author</h4>
+                        <p className="text-muted-foreground">{bundle.author}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-foreground mb-2">Last Updated</h4>
+                        <p className="text-muted-foreground">{new Date(bundle.lastUpdated).toLocaleDateString()}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="tools" className="mt-6">
-                  <Card>
+                  <Card className="bg-card border-border">
                     <CardHeader>
-                      <CardTitle>Included Tools ({(bundle.tools || []).length})</CardTitle>
-                      <CardDescription>
-                        This bundle includes the following tools and technologies
+                      <CardTitle className="text-foreground">Included Tools</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        {(bundle.tools || []).length} tools in this bundle
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(bundle.tools || []).map((tool, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                              <Package className="w-4 h-4 text-purple-600" />
+                          <div key={index} className="flex items-center space-x-3 p-3 border border-border rounded-lg">
+                            <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                              <Package className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{tool}</div>
-                              <div className="text-sm text-gray-500">Tool #{index + 1}</div>
+                              <p className="font-medium text-foreground">{tool}</p>
+                              <p className="text-sm text-muted-foreground">Tool {index + 1}</p>
                             </div>
                           </div>
                         ))}
@@ -277,71 +249,54 @@ export default function BundleDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="deployment" className="mt-6">
-                  <div className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Deployment Guide</CardTitle>
-                        <CardDescription>
-                          Follow these steps to deploy this bundle
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-3">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              1
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Prepare Your Environment</h4>
-                              <p className="text-sm text-gray-600">Ensure you have the necessary prerequisites installed</p>
-                            </div>
+                  <Card className="bg-card border-border">
+                    <CardHeader>
+                      <CardTitle className="text-foreground">Deployment Guide</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        Follow these steps to deploy this bundle
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-sm font-medium text-purple-600 dark:text-purple-400">
+                            1
                           </div>
-                          
-                          <div className="flex items-start space-x-3">
-                            <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              2
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Configure Tools</h4>
-                              <p className="text-sm text-gray-600">Set up each tool according to the bundle specifications</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start space-x-3">
-                            <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              3
-                            </div>
-                            <div>
-                              <h4 className="font-medium">Deploy & Test</h4>
-                              <p className="text-sm text-gray-600">Deploy the bundle and verify everything works correctly</p>
-                            </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">Prerequisites</h4>
+                            <p className="text-sm text-muted-foreground">Ensure you have the required dependencies installed</p>
                           </div>
                         </div>
-
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-blue-900 mb-2">Estimated Deployment Time</h4>
-                          <p className="text-blue-800">{bundle.estimatedTime}</p>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-sm font-medium text-purple-600 dark:text-purple-400">
+                            2
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">Configuration</h4>
+                            <p className="text-sm text-muted-foreground">Configure the tools according to your environment</p>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Quick Deploy</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-gray-600 mb-4">
-                          Use our one-click deployment to get this bundle running quickly
-                        </p>
+                        <div className="flex items-start space-x-3">
+                          <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center text-sm font-medium text-purple-600 dark:text-purple-400">
+                            3
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">Deploy</h4>
+                            <p className="text-sm text-muted-foreground">Run the deployment commands</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6">
                         <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600" asChild>
                           <Link href={`/deploy/bundle/${bundle.id}`}>
                             <Zap className="w-4 h-4 mr-2" />
-                            Deploy Now
+                            Deploy This Bundle
                           </Link>
                         </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </div>
@@ -349,12 +304,48 @@ export default function BundleDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="text-foreground">Bundle Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Rating</span>
+                  <div className="flex items-center">
+                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                    <span className="font-medium text-foreground">{bundle.rating}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Deployments</span>
+                  <div className="flex items-center">
+                    <Download className="w-4 h-4 mr-1" />
+                    <span className="font-medium text-foreground">{bundle.deployments}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Popularity</span>
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    <span className="font-medium text-foreground">{bundle.popularity}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Estimated Time</span>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span className="font-medium text-foreground">{bundle.estimatedTime}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-foreground">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full" size="lg" asChild>
+                <Button className="w-full" asChild>
                   <Link href={`/deploy/bundle/${bundle.id}`}>
                     <Zap className="w-4 h-4 mr-2" />
                     Deploy Bundle
@@ -365,71 +356,9 @@ export default function BundleDetailPage() {
                   View Documentation
                 </Button>
                 <Button variant="outline" className="w-full">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Config
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Bundle
                 </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Bundle Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Rating:</span>
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                    <span className="font-medium">{bundle.rating}</span>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Deployments:</span>
-                  <span className="font-medium">{bundle.deployments}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Popularity:</span>
-                  <span className="font-medium">{bundle.popularity}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Last Updated:</span>
-                  <span className="font-medium">{new Date(bundle.lastUpdated).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Featured:</span>
-                  {bundle.featured ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Yes
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                      No
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  Community
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Author:</span>
-                  <span className="font-medium">{bundle.author}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tools Count:</span>
-                  <span className="font-medium">{bundle.tools.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Category:</span>
-                  <Badge variant="outline">{bundle.category}</Badge>
-                </div>
               </CardContent>
             </Card>
           </div>
