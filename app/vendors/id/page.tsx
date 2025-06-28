@@ -25,7 +25,7 @@ export default function VendorDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="p-8 text-center bg-background border-border">
+        <Card className="p-8 text-center bg-card border-border">
           <Loader2 className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
           <h2 className="text-xl font-semibold mb-2 text-foreground">Loading Vendor Details</h2>
           <p className="text-muted-foreground">Please wait while we fetch the vendor information...</p>
@@ -37,7 +37,7 @@ export default function VendorDetailPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="p-8 text-center bg-background border-border">
+        <Card className="p-8 text-center bg-card border-border">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2 text-foreground">Error Loading Vendor</h2>
           <p className="text-muted-foreground mb-4">{error}</p>
@@ -52,7 +52,7 @@ export default function VendorDetailPage() {
   if (!vendor) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="p-8 text-center bg-background border-border">
+        <Card className="p-8 text-center bg-card border-border">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2 text-foreground">Vendor Not Found</h2>
           <p className="text-muted-foreground mb-4">The vendor you're looking for doesn't exist.</p>
@@ -79,18 +79,18 @@ export default function VendorDetailPage() {
           <div className="flex items-center gap-2">
             <Avatar className="w-12 h-12">
               <AvatarImage src={vendor.logo} alt={vendor.name} />
-              <AvatarFallback className="bg-purple-100 text-purple-600 text-lg font-bold">
+              <AvatarFallback className="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-200 text-lg font-bold">
                 {vendor.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <span className="text-2xl font-bold text-foreground">{vendor.name}</span>
             {vendor.verified && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
                 Verified
               </Badge>
             )}
             {vendor.featured && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800 text-xs">
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-xs">
                 <Award className="w-3 h-3 mr-1" />
                 Featured
               </Badge>
@@ -98,7 +98,7 @@ export default function VendorDetailPage() {
           </div>
         </div>
         
-        <Card className="bg-background border-border">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="text-2xl mb-2 text-foreground">{vendor.name}</CardTitle>
             <CardDescription className="text-base text-muted-foreground">
@@ -129,7 +129,7 @@ export default function VendorDetailPage() {
               </div>
               <div className="flex items-center gap-1">
                 <span>Success Rate:</span>
-                <span className="text-green-600 font-medium">{vendor.successRate}%</span>
+                <span className="text-green-600 dark:text-green-400 font-medium">{vendor.successRate}%</span>
               </div>
             </div>
             <div>
