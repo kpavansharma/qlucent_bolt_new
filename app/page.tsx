@@ -361,14 +361,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <Image
-                src="/ql_logo.png"
-                alt="Qlucent.ai"
-                width={40}
-                height={40}
-                className="w-10 h-10"
-                priority
-              />
+              <div className="relative w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+                <Image
+                  src="/ql_logo.png"
+                  alt="Qlucent.ai"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                  priority
+                />
+              </div>
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
               </span>
@@ -926,13 +928,15 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
-                <Image
-                  src="/ql_logo.png"
-                  alt="Qlucent.ai"
-                  width={32}
-                  height={32}
-                  className="w-8 h-8"
-                />
+                <div className="relative w-8 h-8 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+                  <Image
+                    src="/ql_logo.png"
+                    alt="Qlucent.ai"
+                    width={24}
+                    height={24}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <span className="text-xl font-bold">Qlucent.ai</span>
               </div>
               <p className="text-muted-foreground mb-6 max-w-md">

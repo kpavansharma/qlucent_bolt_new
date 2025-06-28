@@ -107,13 +107,13 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg border border-gray-200 p-2">
             <Image
               src="/ql_logo.png"
               alt="Qlucent.ai"
-              width={32}
-              height={32}
-              className="w-8 h-8 animate-pulse"
+              width={48}
+              height={48}
+              className="w-full h-full object-contain animate-pulse"
             />
           </div>
           <p className="text-gray-600">Loading...</p>
@@ -130,14 +130,16 @@ export default function DashboardPage() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src="/ql_logo.png"
-                alt="Qlucent.ai"
-                width={32}
-                height={32}
-                className="w-8 h-8"
-              />
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="relative w-8 h-8 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+                <Image
+                  src="/ql_logo.png"
+                  alt="Qlucent.ai"
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
               </span>
@@ -261,13 +263,15 @@ export default function DashboardPage() {
                 <Link href="/bundles">
                   <CardHeader>
                     <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                      <Image
-                        src="/ql_logo.png"
-                        alt="AI Bundles"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6"
-                      />
+                      <div className="relative w-6 h-6 bg-white rounded p-1">
+                        <Image
+                          src="/ql_logo.png"
+                          alt="AI Bundles"
+                          width={16}
+                          height={16}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
                     </div>
                     <CardTitle>AI Bundles</CardTitle>
                     <CardDescription>
