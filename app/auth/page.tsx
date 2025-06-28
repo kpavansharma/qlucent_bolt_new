@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, Github, Eye, EyeOff, ArrowLeft, Database, Cloud, Code, Zap, Shield, Monitor, Server, Cpu, Globe, Lock } from 'lucide-react';
+import { Github, Eye, EyeOff, ArrowLeft, Database, Cloud, Code, Zap, Shield, Monitor, Server, Cpu, Globe, Lock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -161,7 +162,13 @@ export default function AuthPage() {
         <div className="text-center">
           <div className="mb-8">
             <div className="w-24 h-24 bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="w-12 h-12 text-white" />
+              <Image
+                src="/ql_logo.png"
+                alt="Qlucent.ai"
+                width={48}
+                height={48}
+                className="w-12 h-12"
+              />
             </div>
             <h3 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
               Qlucent AI
@@ -179,7 +186,13 @@ export default function AuthPage() {
           {/* Mobile Header */}
           <div className="lg:hidden mb-8 text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-8 h-8 text-white" />
+              <Image
+                src="/ql_logo.png"
+                alt="Qlucent.ai"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
               Qlucent AI

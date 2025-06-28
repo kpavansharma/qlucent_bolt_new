@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Sparkles, Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface NavigationProps {
   currentPage?: string;
@@ -38,9 +39,13 @@ export function Navigation({ currentPage }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
+            <Image
+              src="/ql_logo.png"
+              alt="Qlucent.ai"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Qlucent.ai
             </span>
@@ -227,4 +232,4 @@ export function Navigation({ currentPage }: NavigationProps) {
       </div>
     </nav>
   );
-} 
+}

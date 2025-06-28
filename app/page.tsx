@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Sparkles, Zap, Shield, ArrowRight, Github, Star, Users, Download, CheckCircle, Play, Code, Database, Monitor, Cloud, Lock, BarChart3, Rocket, Globe, Award, TrendingUp, Building2, Heart, MessageSquare, ChevronRight, Menu, X, User, LogOut } from 'lucide-react';
+import { Search, Sparkles, Zap, Shield, ArrowRight, Github, Star, Users, Download, CheckCircle, Play, Code, Database, Monitor, Cloud, Lock, BarChart3, Rocket, Globe, Award, TrendingUp, Building2, Heart, MessageSquare, ChevronRight, Menu, X, User, LogOut, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,8 +11,6 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { motion, useAnimation } from 'framer-motion';
-import { Typewriter } from 'react-simple-typewriter';
 
 const featuredTools = [
   {
@@ -233,7 +231,7 @@ const companyLogos = [
     name: 'Amazon',
     logo: (
       <svg viewBox="0 0 24 24" className="w-8 h-8">
-        <path fill="#FF9900" d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726-1.548.41-3.156.615-4.83.615-3.42 0-6.673-.633-9.755-1.902-.244-.1-.432-.21-.563-.328-.13-.116-.18-.226-.15-.328.03-.1.09-.18.18-.24.09-.06.18-.09.27-.09.09 0 .18.03.27.09.36.12.6.36.84.6.24.24.44.52.6.84.16.32.28.66.36 1.02.08.36.12.7.12 1.02s-.04.66-.12 1.02c-.08.36-.2.7-.36 1.02-.16.32-.36.6-.6.84-.24.24-.52.44-.84.6-.32.16-.66.28-1.02.36-.36.08-.7.12-1.02.12z"/>
+        <path fill="#FF9900" d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726-1.548.41-3.156.615-4.83.615-3.42 0-6.673-.633-9.755-1.902-.244-.1-.432-.21-.563-.328-.13-.116-.18-.226-.15-.328.03-.1.09-.18.18-.24.09-.06.18-.09.27-.09.09 0 .18.03.27.09z"/>
         <path fill="#146EB4" d="M20.996 15.673c-.32 0-.66-.04-1.02-.12-.36-.08-.7-.2-1.02-.36-.32-.16-.6-.36-.84-.6-.24-.24-.44-.52-.6-.84-.16-.32-.28-.66-.36-1.02-.08-.36-.12-.7-.12-1.02s.04-.66.12-1.02c.08-.36.2-.7.36-1.02.16-.32.36-.6.6-.84.24-.24.52-.44.84-.6.32-.16.66-.28 1.02-.36.36-.08.7-.12 1.02-.12s.66.04 1.02.12c.36.08.7.2 1.02.36.32.16.6.36.84.6.24.24.44.52.6.84.16.32.28.66.36 1.02.08.36.12.7.12 1.02s-.04.66-.12 1.02c-.08.36-.2.7-.36 1.02-.16.32-.36.6-.6.84-.24.24-.52.44-.84.6-.32.16-.66.28-1.02.36-.36.08-.7.12-1.02.12z"/>
       </svg>
     )
@@ -315,58 +313,6 @@ const pricingPlans = [
   }
 ];
 
-// Tool logo data for cluster section (inline SVGs)
-const toolLogos = [
-  { name: 'Vue.js', url: 'https://vuejs.org', svg: (
-    <svg viewBox="0 0 261.76 226.69" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><polygon fill="#41B883" points="130.88,0 0,0 130.88,226.69 261.76,0 "/><polygon fill="#34495E" points="130.88,41.98 43.63,41.98 130.88,192.73 218.13,41.98 "/><polygon fill="#41B883" points="130.88,41.98 87.25,41.98 130.88,117.13 174.51,41.98 "/></g></svg>
-  ) },
-  { name: 'Angular', url: 'https://angular.io', svg: (
-    <svg viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><polygon fill="#E23237" points="125,0 250,45.5 225,200 125,250 25,200 0,45.5 "/><polygon fill="#B52E31" points="125,0 125,27.5 125,27.5 125,222.5 125,250 225,200 250,45.5 "/><polygon fill="#fff" points="125,45 60,200 90,200 100,175 150,175 160,200 190,200 125,45 "/><polygon fill="#B52E31" points="125,70 145,120 105,120 "/></g></svg>
-  ) },
-  { name: 'React', url: 'https://reactjs.org', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><circle cx="128" cy="128" r="28" fill="#61DAFB"/><g stroke="#61DAFB" strokeWidth="16" fill="none"><ellipse rx="100" ry="40" cx="128" cy="128" transform="rotate(60 128 128)"/><ellipse rx="100" ry="40" cx="128" cy="128" transform="rotate(120 128 128)"/><ellipse rx="100" ry="40" cx="128" cy="128"/></g></g></svg>
-  ) },
-  { name: 'Next.js', url: 'https://nextjs.org', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><path d="M120.5 32C74.1 32 36 70.1 36 116.5c0 46.4 38.1 84.5 84.5 84.5 46.4 0 84.5-38.1 84.5-84.5C205 70.1 167 32 120.5 32zm0 154c-38.4 0-69.5-31.1-69.5-69.5S82.1 47 120.5 47 190 78.1 190 116.5 158.9 186 120.5 186z" fill="#000"/><path d="M176 80l-80 96" stroke="#000" strokeWidth="8"/></g></svg>
-  ) },
-  { name: 'Flutter', url: 'https://flutter.dev', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><polygon fill="#47C5FB" points="0,256 128,128 256,256 128,384 "/><polygon fill="#00569E" points="128,128 256,0 384,128 256,256 "/><polygon fill="#00B5F8" points="128,128 256,0 128,0 0,128 "/></g></svg>
-  ) },
-  { name: 'Docker', url: 'https://docker.com', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><path d="M64 160h128v32H64z" fill="#2496ED"/><rect x="80" y="128" width="32" height="32" fill="#2496ED"/><rect x="112" y="128" width="32" height="32" fill="#2496ED"/><rect x="144" y="128" width="32" height="32" fill="#2496ED"/></g></svg>
-  ) },
-  { name: 'Git', url: 'https://git-scm.com', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><path d="M128 32l96 96-96 96-96-96z" fill="#F34F29"/><circle cx="128" cy="128" r="32" fill="#fff"/></g></svg>
-  ) },
-  { name: 'GitHub', url: 'https://github.com', svg: (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><path fill="#181717" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.809 1.304 3.495.997.108-.775.418-1.305.762-1.606-2.665-.304-5.466-1.332-5.466-5.931 0-1.31.469-2.381 1.236-3.221-.124-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.984-.399 3.003-.404 1.019.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.873.119 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.803 5.625-5.475 5.921.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.297 24 12c0-6.63-5.373-12-12-12z"/></g></svg>
-  ) },
-  { name: 'Terraform', url: 'https://www.terraform.io', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><polygon fill="#623CE4" points="128,0 256,74 128,148 0,74 "/><polygon fill="#623CE4" points="128,148 256,222 128,296 0,222 "/></g></svg>
-  ) },
-  { name: 'Jenkins', url: 'https://www.jenkins.io', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><ellipse cx="128" cy="128" rx="120" ry="120" fill="#fff"/><ellipse cx="128" cy="128" rx="100" ry="100" fill="#D6D6D6"/><ellipse cx="128" cy="128" rx="80" ry="80" fill="#BDBDBD"/><ellipse cx="128" cy="128" rx="60" ry="60" fill="#F5F5F5"/><ellipse cx="128" cy="128" rx="40" ry="40" fill="#E95420"/></g></svg>
-  ) },
-  { name: 'Python', url: 'https://www.python.org', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><path d="M128 32c-53 0-96 43-96 96s43 96 96 96 96-43 96-96-43-96-96-96zm0 176c-44.2 0-80-35.8-80-80s35.8-80 80-80 80 35.8 80 80-35.8 80-80 80z" fill="#3776AB"/><circle cx="128" cy="128" r="40" fill="#FFD43B"/></g></svg>
-  ) },
-  { name: 'JavaScript', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><rect x="32" y="32" width="192" height="192" rx="40" fill="#F7DF1E"/><text x="50%" y="60%" textAnchor="middle" fontSize="80" fill="#000" fontFamily="monospace" dy=".3em">JS</text></g></svg>
-  ) },
-  { name: 'TypeScript', url: 'https://www.typescriptlang.org', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><rect x="32" y="32" width="192" height="192" rx="40" fill="#3178C6"/><text x="50%" y="60%" textAnchor="middle" fontSize="60" fill="#fff" fontFamily="monospace" dy=".3em">TS</text></g></svg>
-  ) },
-  { name: 'npm', url: 'https://www.npmjs.com', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><rect x="32" y="32" width="192" height="192" rx="40" fill="#CB3837"/><text x="50%" y="60%" textAnchor="middle" fontSize="60" fill="#fff" fontFamily="monospace" dy=".3em">npm</text></g></svg>
-  ) },
-  { name: 'Go', url: 'https://golang.org', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><rect width="256" height="256" rx="60" fill="#fff"/><ellipse cx="128" cy="128" rx="80" ry="60" fill="#00ADD8"/><ellipse cx="128" cy="128" rx="40" ry="30" fill="#fff"/></g></svg>
-  ) },
-  { name: 'Kubernetes', url: 'https://kubernetes.io', svg: (
-    <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 md:w-16 md:h-16"><g><circle cx="128" cy="128" r="120" fill="#326CE5"/><polygon fill="#fff" points="128,48 176,128 128,208 80,128 "/><circle cx="128" cy="128" r="24" fill="#326CE5"/></g></svg>
-  ) },
-];
-
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -415,9 +361,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 flex items-center justify-center">
-                <Image src="/ql_logo.png" alt="Qlucent Logo" width={32} height={32} className="w-8 h-8 object-contain" priority />
-              </div>
+              <Image
+                src="/ql_logo.png"
+                alt="Qlucent.ai"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
               </span>
@@ -603,7 +553,7 @@ export default function Home() {
               <div className="text-muted-foreground font-medium">Verified Vendors</div>
             </div>
             <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
-              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">1K+</div>
+              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">1M+</div>
               <div className="text-muted-foreground font-medium">Deployments</div>
             </div>
             <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
@@ -617,166 +567,76 @@ export default function Home() {
       {/* Problem & Solution */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
-            variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.2 } } }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Problem Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-4xl font-bold text-foreground mb-6">
                 The Problem with Tool Discovery
               </h2>
               <div className="space-y-6">
-                {[{
-                  title: 'Scattered Information',
-                  desc: 'Tools are spread across GitHub, Product Hunt, Reddit, and countless other platforms',
-                  icon: <X className="w-4 h-4 text-red-600 dark:text-red-400" />,
-                  color: 'bg-red-100 dark:bg-red-900'
-                }, {
-                  title: 'Complex Deployment',
-                  desc: 'Setting up tools requires extensive configuration and DevOps expertise',
-                  icon: <X className="w-4 h-4 text-red-600 dark:text-red-400" />,
-                  color: 'bg-red-100 dark:bg-red-900'
-                }, {
-                  title: 'No Expert Guidance',
-                  desc: 'Finding qualified vendors and consultants for implementation is time-consuming',
-                  icon: <X className="w-4 h-4 text-red-600 dark:text-red-400" />,
-                  color: 'bg-red-100 dark:bg-red-900'
-                }].map((item, i) => (
-                  <motion.div key={item.title} variants={{ hidden: { opacity: 0, x: -40 }, visible: { opacity: 1, x: 0 } }} className="flex items-start space-x-4">
-                    <div className={`w-8 h-8 ${item.color} rounded-full flex items-center justify-center flex-shrink-0`}>{item.icon}</div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                      <p className="text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-            {/* Solution Side */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}
-              variants={{ hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0, transition: { delay: 0.3 } } }}
-              className="relative flex flex-col items-center justify-center">
-              <motion.div className="w-64 h-64 rounded-full bg-gradient-to-br from-purple-200/60 to-blue-200/60 dark:from-purple-900/40 dark:to-blue-900/40 flex items-center justify-center mb-8 shadow-xl">
-                <Sparkles className="w-20 h-20 text-purple-600 dark:text-purple-300 animate-pulse" />
-              </motion.div>
-              <motion.h3 className="text-3xl font-bold text-foreground mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                Our AI-Powered Solution
-              </motion.h3>
-              <motion.ul className="space-y-4 text-lg" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.2 } } }}>
-                {[{
-                  icon: <Search className="w-6 h-6 text-blue-500" />,
-                  text: 'Semantic search across all sources'
-                }, {
-                  icon: <Sparkles className="w-6 h-6 text-purple-500" />,
-                  text: 'Personalized AI recommendations'
-                }, {
-                  icon: <Zap className="w-6 h-6 text-green-500" />,
-                  text: 'One-click deployment engine'
-                }, {
-                  icon: <Users className="w-6 h-6 text-orange-500" />,
-                  text: 'Verified expert vendors'
-                }].map((item, i) => (
-                  <motion.li key={item.text} variants={{ hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0 } }} className="flex items-center gap-3">
-                    {item.icon}
-                    <span>{item.text}</span>
-                  </motion.li>
-                ))}
-              </motion.ul>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Powerful Features - Fullscreen Scrollable */}
-      <section className="relative w-full h-screen overflow-x-hidden overflow-y-auto scroll-smooth snap-y snap-mandatory bg-background">
-        <div className="h-full w-full flex flex-col">
-          {features.map((feature, idx) => (
-            <motion.div key={feature.title} className="min-h-screen flex flex-col items-center justify-center snap-center px-4"
-              initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: idx * 0.1 }}>
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-8 bg-gradient-to-br ${feature.gradient} shadow-lg`}>
-                {feature.icon}
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-center">{feature.title}</h2>
-              <p className="text-xl text-muted-foreground max-w-2xl text-center mb-8">{feature.description}</p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-8 flex gap-2 z-10">
-          {features.map((_, idx) => (
-            <span key={idx} className="w-3 h-3 rounded-full bg-muted-foreground/30 inline-block" />
-          ))}
-        </div>
-      </section>
-
-      {/* Explore Tool Categories - Typing Effect */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8">
-            Explore Tool Categories
-          </h2>
-          <div className="text-3xl md:text-4xl font-mono text-purple-600 dark:text-purple-400 mb-8 h-16">
-            <Typewriter
-              words={toolCategories.map(c => c.name)}
-              loop={0}
-              cursor
-              cursorStyle="|"
-              typeSpeed={80}
-              deleteSpeed={40}
-              delaySpeed={1200}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8">
-            {toolCategories.map((cat) => (
-              <motion.div key={cat.name} whileHover={{ scale: 1.05 }} className={`rounded-2xl border-2 ${cat.color} p-6 flex flex-col items-center cursor-pointer transition-all`} onClick={() => handleCategoryClick(cat.category)}>
-                <div className="mb-4">{cat.icon}</div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">{cat.name}</h3>
-                <p className="text-muted-foreground mb-2 text-center">{cat.description}</p>
-                <div className="flex flex-wrap gap-1 justify-center">
-                  {cat.tools.map(tool => (
-                    <Badge key={tool} variant="secondary" className="text-xs">{tool}</Badge>
-                  ))}
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Scattered Information</h3>
+                    <p className="text-muted-foreground">Tools are spread across GitHub, Product Hunt, Reddit, and countless other platforms</p>
+                  </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tool Logos Cluster Section */}
-      <section className="py-24 bg-gradient-to-br from-[#181A2A] to-[#23244A] relative overflow-hidden">
-        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-10 text-center">Explore the Ecosystem</h2>
-          <div className="relative w-[340px] h-[340px] md:w-[420px] md:h-[420px] flex items-center justify-center">
-            {/* Center Qlucent logo */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-              <Image src="/ql_logo.png" alt="Qlucent Logo" width={80} height={80} className="w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-xl" />
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Complex Deployment</h3>
+                    <p className="text-muted-foreground">Setting up tools requires extensive configuration and DevOps expertise</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">No Expert Guidance</h3>
+                    <p className="text-muted-foreground">Finding qualified vendors and consultants for implementation is time-consuming</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            {/* Tool logos in a circle */}
-            {toolLogos.map((tool, i) => {
-              const angle = (2 * Math.PI * i) / toolLogos.length;
-              const radius = 140;
-              const x = Math.cos(angle) * radius;
-              const y = Math.sin(angle) * radius;
-              return (
-                <motion.a
-                  key={tool.name}
-                  href={tool.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute"
-                  style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}
-                  whileHover={{ scale: 1.2, rotate: 8 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={tool.name}
-                >
-                  {tool.svg}
-                </motion.a>
-              );
-            })}
+            <div>
+              <h2 className="text-4xl font-bold text-foreground mb-6">
+                Our AI-Powered Solution
+              </h2>
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Unified Discovery</h3>
+                    <p className="text-muted-foreground">Search across all platforms with natural language queries and AI-powered recommendations</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">One-Click Deployment</h3>
+                    <p className="text-muted-foreground">Deploy tools instantly with pre-configured Docker, Helm charts, and GitHub Actions</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Expert Marketplace</h3>
+                    <p className="text-muted-foreground">Connect with verified vendors for consulting, training, and enterprise support</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-white/80 mt-10 text-lg text-center max-w-2xl">
-            Qlucent.ai brings together the best of open-source and enterprise tools. Click any logo to learn more about the technology powering modern development.
-          </p>
         </div>
       </section>
 
@@ -1065,24 +925,27 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <Image src="/ql_logo.png" alt="Qlucent Logo" width={32} height={32} className="w-8 h-8 object-contain" priority />
-                </div>
+                <Image
+                  src="/ql_logo.png"
+                  alt="Qlucent.ai"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8"
+                />
                 <span className="text-xl font-bold">Qlucent.ai</span>
               </div>
               <p className="text-muted-foreground mb-6 max-w-md">
                 The AI-powered platform for discovering, comparing, and deploying the perfect tools for your tech stack.
               </p>
               <div className="flex space-x-4">
-                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center hover:bg-muted/80 transition-colors cursor-pointer">
-                  <Github className="w-5 h-5" />
-                </div>
-                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center hover:bg-muted/80 transition-colors cursor-pointer">
-                  <MessageSquare className="w-5 h-5" />
-                </div>
-                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center hover:bg-muted/80 transition-colors cursor-pointer">
-                  <Heart className="w-5 h-5" />
-                </div>
+                <Link 
+                  href="https://www.linkedin.com/company/qlucent" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center hover:bg-muted/80 transition-colors"
+                >
+                  <Linkedin className="w-5 h-5" />
+                </Link>
               </div>
             </div>
             
@@ -1119,7 +982,7 @@ export default function Home() {
           </div>
           
           <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-muted-foreground">&copy; 2025 Qlucent.ai. All rights reserved.</p>
+            <p className="text-muted-foreground">&copy; 2024 Qlucent.ai. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link>
