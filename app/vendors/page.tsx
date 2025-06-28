@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Star, MapPin, Users, Briefcase, Award, Filter, Calendar, ExternalLink, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,9 @@ export default function VendorsPage() {
   const [selectedTeamSize, setSelectedTeamSize] = useState('All');
   const [sortBy, setSortBy] = useState('rating');
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [allVendors, setAllVendors] = useState<Vendor[]>([]);
+  const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
+  const [useClientSideFiltering, setUseClientSideFiltering] = useState(false);
 
   // Build search parameters
   const searchParams: VendorSearchParams = {
@@ -38,6 +41,12 @@ export default function VendorsPage() {
     limit: 20
   };
 
+  // Fetch all vendors for client-side filtering
+  const { data: allVendorsResponse, loading: allVendorsLoading } = useApi(
+    () => vendorService.getVendors({ limit: 1000 }),
+    []
+  );
+
   // Fetch vendors from backend
   const { data: vendorsResponse, loading, error } = useApi(
     () => vendorService.getVendors(searchParams),
@@ -50,7 +59,90 @@ export default function VendorsPage() {
     []
   );
 
-  const vendors = vendorsResponse?.items || [];
+  // Store all vendors for client-side filtering
+  useEffect(() => {
+    if (allVendorsResponse?.items) {
+      setAllVendors(allVendorsResponse.items);
+    }
+  }, [allVendorsResponse]);
+
+  // Client-side filtering function
+  const filterVendorsClientSide = (vendors: Vendor[]) => {
+    let filtered = [...vendors];
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(vendor => 
+        vendor.name.toLowerCase().includes(query) ||
+        vendor.description.toLowerCase().includes(query) ||
+        (vendor.specialties || []).some(specialty => specialty.toLowerCase().includes(query)) ||
+        (vendor.services || []).some(service => service.toLowerCase().includes(query))
+      );
+    }
+
+    // Filter by specialty
+    if (selectedSpecialty !== 'All') {
+      filtered = filtered.filter(vendor => 
+        (vendor.specialties || []).includes(selectedSpecialty)
+      );
+    }
+
+    // Filter by service
+    if (selectedService !== 'All') {
+      filtered = filtered.filter(vendor => 
+        (vendor.services || []).includes(selectedService)
+      );
+    }
+
+    // Filter by team size
+    if (selectedTeamSize !== 'All') {
+      filtered = filtered.filter(vendor => vendor.teamSize === selectedTeamSize);
+    }
+
+    // Filter by verified status
+    if (showVerifiedOnly) {
+      filtered = filtered.filter(vendor => vendor.verified);
+    }
+
+    // Sort results
+    switch (sortBy) {
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'projects':
+        filtered.sort((a, b) => b.projects - a.projects);
+        break;
+      case 'name':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        // Keep original order
+        break;
+    }
+
+    return filtered;
+  };
+
+  // Determine which vendors to display
+  useEffect(() => {
+    if (useClientSideFiltering && allVendors.length > 0) {
+      const filtered = filterVendorsClientSide(allVendors);
+      setFilteredVendors(filtered);
+    } else if (vendorsResponse?.items) {
+      setFilteredVendors(vendorsResponse.items);
+    }
+  }, [useClientSideFiltering, allVendors, vendorsResponse, searchQuery, selectedSpecialty, selectedService, selectedTeamSize, sortBy, showVerifiedOnly]);
+
+  // Check if backend search is working, fallback to client-side
+  useEffect(() => {
+    if (error && !useClientSideFiltering && allVendors.length > 0) {
+      console.log('⚠️ Backend search failed, switching to client-side filtering');
+      setUseClientSideFiltering(true);
+    }
+  }, [error, useClientSideFiltering, allVendors.length]);
+
+  const vendors = filteredVendors;
   const featuredVendors = featuredVendorsResponse?.items || [];
 
   return (
@@ -86,13 +178,92 @@ export default function VendorsPage() {
         </div>
       </section>
 
+      {/* Filters Section */}
+      <section className="py-8 bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Specialty</label>
+                  <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {specialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Service</label>
+                  <Select value={selectedService} onValueChange={setSelectedService}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((service) => (
+                        <SelectItem key={service} value={service}>
+                          {service}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Team Size</label>
+                  <Select value={selectedTeamSize} onValueChange={setSelectedTeamSize}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teamSizes.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sort By</label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rating">Rating</SelectItem>
+                      <SelectItem value="projects">Projects</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* Featured Vendors */}
       {!featuredError && featuredVendors && featuredVendors.length > 0 && (
         <section className="py-12 bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-foreground">Featured Vendors</h2>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                 <Award className="w-3 h-3 mr-1" />
                 Top Rated
               </Badge>
@@ -106,12 +277,12 @@ export default function VendorsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {featuredVendors.map((vendor) => (
-                  <Card key={vendor.id} className="hover:shadow-lg transition-all duration-300 group border-purple-200 bg-background">
+                  <Card key={vendor.id} className="hover:shadow-lg transition-all duration-300 group border-purple-200 dark:border-purple-800 bg-card">
                     <CardHeader>
                       <div className="flex items-start space-x-4">
                         <Avatar className="w-16 h-16">
                           <AvatarImage src={vendor.logo} alt={vendor.name} />
-                          <AvatarFallback className="bg-purple-100 text-purple-600 text-lg font-bold">
+                          <AvatarFallback className="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-200 text-lg font-bold">
                             {vendor.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
@@ -121,7 +292,7 @@ export default function VendorsPage() {
                               {vendor.name}
                             </CardTitle>
                             {vendor.verified && (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
                                 Verified
                               </Badge>
                             )}
@@ -174,7 +345,7 @@ export default function VendorsPage() {
                         </div>
                         <div>
                           <span className="text-muted-foreground">Success Rate:</span>
-                          <div className="font-medium text-green-600">{vendor.successRate}%</div>
+                          <div className="font-medium text-green-600 dark:text-green-400">{vendor.successRate}%</div>
                         </div>
                       </div>
                       
@@ -198,117 +369,47 @@ export default function VendorsPage() {
       )}
 
       {/* All Vendors */}
-      <section className="py-12 bg-muted/30">
+      <section className="py-12 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Filters */}
-            <div className="lg:w-64 space-y-6">
-              <Card className="bg-background border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
-                    Filters
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Specialty</label>
-                    <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {specialties.map(specialty => (
-                          <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-foreground">All Vendors</h2>
+            <p className="text-muted-foreground">
+              {loading || allVendorsLoading ? 'Loading...' : `${vendors.length} vendors found`}
+              {useClientSideFiltering && ' (client-side filtering)'}
+            </p>
+          </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Service</label>
-                    <Select value={selectedService} onValueChange={setSelectedService}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {services.map(service => (
-                          <SelectItem key={service} value={service}>{service}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Team Size</label>
-                    <Select value={selectedTeamSize} onValueChange={setSelectedTeamSize}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teamSizes.map(size => (
-                          <SelectItem key={size} value={size}>{size}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Sort By</label>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rating">Highest Rated</SelectItem>
-                        <SelectItem value="projects">Most Projects</SelectItem>
-                        <SelectItem value="name">Name A-Z</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Loading State */}
+          {(loading || allVendorsLoading) && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+              <span className="ml-2 text-muted-foreground">Loading vendors...</span>
             </div>
+          )}
 
-            {/* Results */}
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">All Vendors</h2>
-                  <p className="text-muted-foreground">
-                    {loading ? 'Loading...' : `${vendorsResponse?.total || 0} vendors found`}
-                  </p>
-                </div>
-              </div>
+          {/* Error State */}
+          {error && !useClientSideFiltering && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground mb-4">Failed to load vendors from server</p>
+            </div>
+          )}
 
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                  <span className="ml-2 text-muted-foreground">Loading vendors...</span>
+          {/* Results */}
+          {!loading && !allVendorsLoading && (
+            <>
+              {vendors.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No vendors found matching your criteria</p>
                 </div>
-              ) : error ? (
-                <Card className="p-12 text-center bg-background border-border">
-                  <div className="text-red-400 mb-4">
-                    <h3 className="text-lg font-medium text-foreground mb-2">Error loading vendors</h3>
-                    <p className="text-muted-foreground mb-4">{error}</p>
-                  </div>
-                </Card>
-              ) : vendors.length === 0 ? (
-                <Card className="p-12 text-center bg-background border-border">
-                  <div className="text-muted-foreground">
-                    <h3 className="text-lg font-medium text-foreground mb-2">No vendors found</h3>
-                    <p>Try adjusting your search criteria or filters</p>
-                  </div>
-                </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {vendors.map((vendor) => (
-                    <Card key={vendor.id} className="hover:shadow-lg transition-all duration-300 group bg-background border-border">
+                    <Card key={vendor.id} className="hover:shadow-lg transition-all duration-300 group bg-card border-border">
                       <CardHeader>
                         <div className="flex items-start space-x-4">
                           <Avatar className="w-12 h-12">
                             <AvatarImage src={vendor.logo} alt={vendor.name} />
-                            <AvatarFallback className="bg-purple-100 text-purple-600 text-lg font-bold">
+                            <AvatarFallback className="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-200 font-bold">
                               {vendor.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
@@ -318,12 +419,12 @@ export default function VendorsPage() {
                                 {vendor.name}
                               </CardTitle>
                               {vendor.verified && (
-                                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
                                   Verified
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <div className="flex items-center">
                                 <Star className="w-4 h-4 mr-1 text-yellow-500" />
                                 {vendor.rating}
@@ -333,44 +434,46 @@ export default function VendorsPage() {
                                 {vendor.location}
                               </div>
                             </div>
-                            <CardDescription className="text-sm text-muted-foreground line-clamp-2">
-                              {vendor.description}
-                            </CardDescription>
                           </div>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div>
-                          <p className="text-xs font-medium text-foreground mb-1">Specialties:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {(vendor.specialties || []).slice(0, 3).map((specialty) => (
-                              <Badge key={specialty} variant="secondary" className="text-xs">
-                                {specialty}
-                              </Badge>
-                            ))}
-                            {(vendor.specialties || []).length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{(vendor.specialties || []).length - 3}
-                              </Badge>
-                            )}
+                        <CardDescription className="text-sm text-muted-foreground line-clamp-2">
+                          {vendor.description}
+                        </CardDescription>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {(vendor.specialties || []).slice(0, 3).map((specialty) => (
+                            <Badge key={specialty} variant="secondary" className="text-xs">
+                              {specialty}
+                            </Badge>
+                          ))}
+                          {(vendor.specialties || []).length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{(vendor.specialties || []).length - 3}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div>
+                            <span>Team:</span>
+                            <div className="font-medium text-foreground">{vendor.teamSize}</div>
+                          </div>
+                          <div>
+                            <span>Projects:</span>
+                            <div className="font-medium text-foreground">{vendor.projects}</div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center">
-                              <Users className="w-3 h-3 mr-1" />
-                              {vendor.teamSize}
-                            </div>
-                            <div className="flex items-center">
-                              <Briefcase className="w-3 h-3 mr-1" />
-                              {vendor.projects}
-                            </div>
-                          </div>
-                          <Button size="sm" variant="outline" asChild>
+
+                        <div className="flex gap-2">
+                          <Button size="sm" className="flex-1" asChild>
                             <Link href={`/vendors/${vendor.id}`}>
-                              View
+                              View Profile
                             </Link>
+                          </Button>
+                          <Button size="sm" variant="outline" className="px-3">
+                            <MessageCircle className="w-4 h-4" />
                           </Button>
                         </div>
                       </CardContent>
@@ -378,8 +481,8 @@ export default function VendorsPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </section>
     </div>
