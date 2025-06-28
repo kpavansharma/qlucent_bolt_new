@@ -360,13 +360,14 @@ export default function Home() {
       <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-3">
               <Image
                 src="/ql_logo.png"
                 alt="Qlucent.ai"
-                width={32}
-                height={32}
-                className="w-8 h-8"
+                width={40}
+                height={40}
+                className="w-10 h-10"
+                priority
               />
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
@@ -924,7 +925,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-2 mb-6">
+              <div className="flex items-center space-x-3 mb-6">
                 <Image
                   src="/ql_logo.png"
                   alt="Qlucent.ai"
