@@ -33,8 +33,17 @@ export default function SearchPage() {
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [showDeploymentReady, setShowDeploymentReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [allTools, setAllTools] = useState<Tool[]>([]);
+  const [filteredTools, setFilteredTools] = useState<Tool[]>([]);
+  const [useClientSideFiltering, setUseClientSideFiltering] = useState(false);
 
-  // Build search parameters
+  // Fetch all tools for client-side filtering
+  const { data: allToolsResponse, loading: allToolsLoading } = useApi(
+    () => toolService.getTools({ limit: 1000 }),
+    []
+  );
+
+  // Build search parameters for backend
   const toolSearchParams: ToolSearchParams = {
     query: searchQuery || undefined,
     category: selectedCategory !== 'All' ? selectedCategory : undefined,
@@ -47,14 +56,97 @@ export default function SearchPage() {
     limit: 12
   };
 
-  // Fetch tools from backend using client-side search and filtering
+  // Fetch tools from backend using search
   const { data: toolsResponse, loading, error, refetch } = useApi(
     () => toolService.searchTools(searchQuery || '', toolSearchParams),
     [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
   );
 
-  const tools = toolsResponse?.items || [];
-  const totalPages = toolsResponse?.totalPages || 1;
+  // Store all tools for client-side filtering
+  useEffect(() => {
+    if (allToolsResponse?.items) {
+      setAllTools(allToolsResponse.items);
+    }
+  }, [allToolsResponse]);
+
+  // Client-side filtering function
+  const filterToolsClientSide = (tools: Tool[]) => {
+    let filtered = [...tools];
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(tool => 
+        tool.name.toLowerCase().includes(query) ||
+        tool.description.toLowerCase().includes(query) ||
+        tool.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(tool => tool.category === selectedCategory);
+    }
+
+    // Filter by license
+    if (selectedLicense !== 'All') {
+      filtered = filtered.filter(tool => tool.license === selectedLicense);
+    }
+
+    // Filter by minimum stars
+    if (minStars[0] > 0) {
+      filtered = filtered.filter(tool => tool.stars >= minStars[0] * 1000);
+    }
+
+    // Filter by verified status
+    if (showVerifiedOnly) {
+      filtered = filtered.filter(tool => tool.verified);
+    }
+
+    // Filter by deployment ready
+    if (showDeploymentReady) {
+      filtered = filtered.filter(tool => tool.deploymentReady);
+    }
+
+    // Sort results
+    switch (sortBy) {
+      case 'stars':
+        filtered.sort((a, b) => b.stars - a.stars);
+        break;
+      case 'downloads':
+        filtered.sort((a, b) => b.downloads - a.downloads);
+        break;
+      case 'aiScore':
+        filtered.sort((a, b) => b.aiScore - a.aiScore);
+        break;
+      case 'name':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        // Relevance sorting (keep original order for now)
+        break;
+    }
+
+    return filtered;
+  };
+
+  // Determine which tools to display
+  useEffect(() => {
+    if (useClientSideFiltering && allTools.length > 0) {
+      const filtered = filterToolsClientSide(allTools);
+      setFilteredTools(filtered);
+    } else if (toolsResponse?.items) {
+      setFilteredTools(toolsResponse.items);
+    }
+  }, [useClientSideFiltering, allTools, toolsResponse, searchQuery, selectedCategory, selectedLicense, minStars, sortBy, showVerifiedOnly, showDeploymentReady]);
+
+  // Check if backend search is working, fallback to client-side
+  useEffect(() => {
+    if (error && !useClientSideFiltering && allTools.length > 0) {
+      console.log('⚠️ Backend search failed, switching to client-side filtering');
+      setUseClientSideFiltering(true);
+    }
+  }, [error, useClientSideFiltering, allTools.length]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -71,15 +163,18 @@ export default function SearchPage() {
     }
   }, [initialQuery, initialCategory]);
 
+  const tools = filteredTools;
+  const totalPages = useClientSideFiltering ? Math.ceil(tools.length / 12) : (toolsResponse?.totalPages || 1);
+
   const ToolCard = ({ tool }: { tool: Tool }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer bg-background border-border">
+    <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer bg-card border-border">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg group-hover:text-purple-600 transition-colors flex items-center gap-2">
             <Link href={`/tools/${tool.id}`} className="hover:underline">
               {tool.name}
             </Link>
-            {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Verified</Badge>}
+            {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">Verified</Badge>}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">{tool.aiScore}% AI Match</Badge>
@@ -143,7 +238,7 @@ export default function SearchPage() {
   );
 
   const ToolListItem = ({ tool }: { tool: Tool }) => (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer bg-background border-border">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer bg-card border-border">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
@@ -153,7 +248,7 @@ export default function SearchPage() {
                   {tool.name}
                 </Link>
               </h3>
-              {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">Verified</Badge>}
+              {tool.verified && <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">Verified</Badge>}
               <Badge variant="outline" className="text-xs">{tool.aiScore}% AI Match</Badge>
             </div>
             <p className="text-muted-foreground text-sm mb-2 line-clamp-2">{tool.description}</p>
@@ -197,105 +292,169 @@ export default function SearchPage() {
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <div className="w-64 space-y-6">
-            <Card className="bg-background border-border">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
                   Filters
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <label htmlFor="category-select" className="text-sm font-medium mb-2 block">Category</label>
+              <CardContent className="space-y-4">
+                {/* Search */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Search tools..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger id="category-select">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div>
-                  <label htmlFor="license-select" className="text-sm font-medium mb-2 block">License</label>
+                {/* License Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">License</label>
                   <Select value={selectedLicense} onValueChange={setSelectedLicense}>
-                    <SelectTrigger id="license-select">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {licenses.map(license => (
-                        <SelectItem key={license} value={license}>{license}</SelectItem>
+                      {licenses.map((license) => (
+                        <SelectItem key={license} value={license}>
+                          {license}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div>
-                  <label htmlFor="stars-slider" className="text-sm font-medium mb-2 block">
-                    Minimum Stars: {minStars[0]}k+
-                  </label>
+                {/* Min Stars */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Min Stars (k)</label>
                   <Slider
-                    id="stars-slider"
                     value={minStars}
                     onValueChange={setMinStars}
-                    max={200}
-                    step={5}
+                    max={100}
+                    step={1}
                     className="w-full"
                   />
+                  <div className="text-xs text-muted-foreground">
+                    {minStars[0]}k+ stars
+                  </div>
                 </div>
 
+                {/* Sort By */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Sort By</label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="relevance">Relevance</SelectItem>
+                      <SelectItem value="stars">Stars</SelectItem>
+                      <SelectItem value="downloads">Downloads</SelectItem>
+                      <SelectItem value="aiScore">AI Score</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Checkboxes */}
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="verified"
                       checked={showVerifiedOnly}
-                      onCheckedChange={setShowVerifiedOnly}
+                      onCheckedChange={(checked) => setShowVerifiedOnly(checked === true)}
                     />
-                    <label htmlFor="verified" className="text-sm">Verified Only</label>
+                    <label htmlFor="verified" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Verified Only
+                    </label>
                   </div>
-                  
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="deployment"
                       checked={showDeploymentReady}
-                      onCheckedChange={setShowDeploymentReady}
+                      onCheckedChange={(checked) => setShowDeploymentReady(checked === true)}
                     />
-                    <label htmlFor="deployment" className="text-sm">Deployment Ready</label>
+                    <label htmlFor="deployment" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Deployment Ready
+                    </label>
                   </div>
                 </div>
+
+                {/* Clear Filters */}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                    setSelectedLicense('All');
+                    setMinStars([0]);
+                    setSortBy('relevance');
+                    setShowVerifiedOnly(false);
+                    setShowDeploymentReady(false);
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Results */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
+          {/* Main Content */}
+          <div className="flex-1 space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Search Results</h1>
+                <h1 className="text-2xl font-bold text-foreground">Discover Tools</h1>
                 <p className="text-muted-foreground">
-                  {loading ? 'Searching...' : `Found ${toolsResponse?.total || 0} tools`}
-                  {searchQuery && ` for "${searchQuery}"`}
+                  {loading || allToolsLoading ? 'Loading...' : `${tools.length} tools found`}
+                  {useClientSideFiltering && ' (client-side filtering)'}
                 </p>
               </div>
-              
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="relevance">Relevance</SelectItem>
-                  <SelectItem value="stars">Most Stars</SelectItem>
-                  <SelectItem value="ai-score">AI Score</SelectItem>
-                  <SelectItem value="recent">Recently Updated</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Loading State */}
-            {loading && (
+            {(loading || allToolsLoading) && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
                 <span className="ml-2 text-muted-foreground">Loading tools...</span>
@@ -303,78 +462,61 @@ export default function SearchPage() {
             )}
 
             {/* Error State */}
-            {error && (
-              <Card className="p-12 text-center bg-background border-border">
-                <div className="text-red-400 mb-4">
-                  <Search className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Error loading tools</h3>
-                  <p className="text-muted-foreground mb-4">{error}</p>
-                  <Button onClick={refetch}>Try Again</Button>
-                </div>
-              </Card>
+            {error && !useClientSideFiltering && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">Failed to load tools from server</p>
+                <Button onClick={() => refetch()}>Retry</Button>
+              </div>
             )}
 
-            {/* No Results */}
-            {!loading && !error && tools.length === 0 && (
-              <Card className="p-12 text-center bg-background border-border">
-                <div className="text-muted-foreground">
-                  <Search className="w-12 h-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No tools found</h3>
-                  <p>Try adjusting your search criteria or filters</p>
-                </div>
-              </Card>
-            )}
-
-            {/* Results Grid/List */}
-            {!loading && !error && tools.length > 0 && (
+            {/* Results */}
+            {!loading && !allToolsLoading && (
               <>
-                <div className={
-                  viewMode === 'grid' 
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                    : 'space-y-4'
-                }>
-                  {tools.map((tool) => (
-                    viewMode === 'grid' 
-                      ? <ToolCard key={tool.id} tool={tool} />
-                      : <ToolListItem key={tool.id} tool={tool} />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center space-x-2 mt-8">
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
+                {tools.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No tools found matching your criteria</p>
                   </div>
+                ) : (
+                  <>
+                    {viewMode === 'grid' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {tools.map((tool) => (
+                          <ToolCard key={tool.id} tool={tool} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {tools.map((tool) => (
+                          <ToolListItem key={tool.id} tool={tool} />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-8">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          disabled={currentPage === totalPages}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
