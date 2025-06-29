@@ -95,7 +95,15 @@ export default function SearchPage() {
   const handleCategoryChange = (category: string) => {
     console.log('🎯 Category changed to:', category);
     setSelectedCategory(category);
+    setSearchQuery(''); // Clear search query when category changes
     setCurrentPage(1);
+    
+    // Update URL with only category parameter
+    const params = new URLSearchParams();
+    if (category !== 'All') params.set('category', category);
+    
+    const newUrl = `/search${params.toString() ? '?' + params.toString() : ''}`;
+    router.push(newUrl, { scroll: false });
   };
 
   // Handle clear filters
