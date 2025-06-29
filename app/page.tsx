@@ -493,7 +493,7 @@ export default function Home() {
         <div className="relative max-w-6xl mx-auto text-center">
           <div className="mb-8">
             <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-4 py-2 text-sm font-medium">
-              🚀 Now in Beta - Join 10,000+ developers
+              🚀 Now in Beta - Join 1000+ developers
             </Badge>
           </div>
           
