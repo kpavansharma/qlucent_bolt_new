@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Zap, Cloud, Server, Settings, CheckCircle, ArrowRight, Play, Code, Database, Monitor } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Zap, Cloud, Server, Settings, CheckCircle, ArrowRight, Play, Code, Database, Monitor, Loader2, ExternalLink, Trash2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,124 +11,224 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import { deploymentService, DeploymentRequest, DeploymentResponse, DeploymentStatus, DeploymentTemplate, DeploymentRegion, InstanceType, UserDeployment } from '@/lib/services/deploymentService';
 
-const deploymentOptions = [
+// Deployment templates that match the standalone service
+const deploymentTemplates = [
   {
-    id: 'docker',
-    name: 'Docker Container',
-    description: 'Deploy as a containerized application',
-    icon: <Server className="w-6 h-6" />,
-    difficulty: 'Easy',
-    time: '5-10 minutes',
-    requirements: ['Docker Engine'],
-    features: ['Portable', 'Isolated', 'Scalable']
+    id: 'redis',
+    name: 'Redis',
+    description: 'In-memory data structure store',
+    category: 'Cache',
+    estimatedTime: '3 minutes',
+    complexity: 'Easy',
+    cost: '$5-10/month',
+    image: 'redis:7-alpine'
   },
   {
-    id: 'kubernetes',
-    name: 'Kubernetes Cluster',
-    description: 'Deploy to Kubernetes for production scale',
-    icon: <Cloud className="w-6 h-6" />,
-    difficulty: 'Advanced',
-    time: '15-30 minutes',
-    requirements: ['Kubernetes Cluster', 'kubectl'],
-    features: ['Auto-scaling', 'High Availability', 'Rolling Updates']
+    id: 'postgres',
+    name: 'PostgreSQL',
+    description: 'Advanced open source relational database',
+    category: 'Database',
+    estimatedTime: '5 minutes',
+    complexity: 'Easy',
+    cost: '$10-20/month',
+    image: 'postgres:15'
   },
   {
-    id: 'cloud',
-    name: 'Cloud Provider',
-    description: 'Deploy directly to AWS, GCP, or Azure',
-    icon: <Zap className="w-6 h-6" />,
-    difficulty: 'Intermediate',
-    time: '10-20 minutes',
-    requirements: ['Cloud Account', 'CLI Tools'],
-    features: ['Managed', 'Scalable', 'Integrated']
+    id: 'prometheus',
+    name: 'Prometheus',
+    description: 'Monitoring system and time series database',
+    category: 'Monitoring',
+    estimatedTime: '10 minutes',
+    complexity: 'Intermediate',
+    cost: '$15-25/month',
+    image: 'prom/prometheus:latest'
   },
   {
-    id: 'compose',
-    name: 'Docker Compose',
-    description: 'Multi-service deployment with Docker Compose',
-    icon: <Settings className="w-6 h-6" />,
-    difficulty: 'Easy',
-    time: '5-15 minutes',
-    requirements: ['Docker Compose'],
-    features: ['Multi-service', 'Configuration', 'Development']
+    id: 'grafana',
+    name: 'Grafana',
+    description: 'Analytics and interactive visualization platform',
+    category: 'Visualization',
+    estimatedTime: '8 minutes',
+    complexity: 'Easy',
+    cost: '$10-15/month',
+    image: 'grafana/grafana:latest'
+  },
+  {
+    id: 'jenkins',
+    name: 'Jenkins',
+    description: 'Automation server for CI/CD pipelines',
+    category: 'CI/CD',
+    estimatedTime: '15 minutes',
+    complexity: 'Intermediate',
+    cost: '$20-30/month',
+    image: 'jenkins/jenkins:lts'
   }
 ];
 
-const quickDeployTools = [
-  {
-    id: 1,
-    name: 'Prometheus',
-    category: 'Monitoring',
-    description: 'Monitoring system and time series database',
-    deploymentMethods: ['Docker', 'Kubernetes', 'Docker Compose'],
-    estimatedTime: '10 minutes',
-    complexity: 'Easy',
-    preconfigured: true
-  },
-  {
-    id: 2,
-    name: 'Grafana',
-    category: 'Visualization',
-    description: 'Analytics and interactive visualization platform',
-    deploymentMethods: ['Docker', 'Kubernetes', 'Cloud'],
-    estimatedTime: '8 minutes',
-    complexity: 'Easy',
-    preconfigured: true
-  },
-  {
-    id: 3,
-    name: 'PostgreSQL',
-    category: 'Database',
-    description: 'Advanced open source relational database',
-    deploymentMethods: ['Docker', 'Kubernetes', 'Cloud'],
-    estimatedTime: '5 minutes',
-    complexity: 'Easy',
-    preconfigured: true
-  },
-  {
-    id: 4,
-    name: 'Redis',
-    category: 'Cache',
-    description: 'In-memory data structure store',
-    deploymentMethods: ['Docker', 'Kubernetes', 'Cloud'],
-    estimatedTime: '3 minutes',
-    complexity: 'Easy',
-    preconfigured: true
-  },
-  {
-    id: 5,
-    name: 'Jenkins',
-    category: 'CI/CD',
-    description: 'Automation server for CI/CD pipelines',
-    deploymentMethods: ['Docker', 'Kubernetes'],
-    estimatedTime: '15 minutes',
-    complexity: 'Intermediate',
-    preconfigured: true
-  },
-  {
-    id: 6,
-    name: 'Jaeger',
-    category: 'Tracing',
-    description: 'Distributed tracing platform',
-    deploymentMethods: ['Docker', 'Kubernetes'],
-    estimatedTime: '12 minutes',
-    complexity: 'Intermediate',
-    preconfigured: true
-  }
+// Default regions
+const defaultRegions = [
+  { id: 'us-central1', name: 'Iowa (us-central1)', cost: 'Standard' },
+  { id: 'us-east1', name: 'South Carolina (us-east1)', cost: 'Standard' },
+  { id: 'us-west1', name: 'Oregon (us-west1)', cost: 'Standard' },
+  { id: 'europe-west1', name: 'Belgium (europe-west1)', cost: 'Standard' },
+  { id: 'asia-northeast1', name: 'Tokyo (asia-northeast1)', cost: 'Standard' }
+];
+
+// Default instance types
+const defaultInstanceTypes = [
+  { id: 'small', name: 'Small (512MB RAM, 0.5 vCPU)', cost: '$5-10/month' },
+  { id: 'medium', name: 'Medium (1GB RAM, 1 vCPU)', cost: '$10-20/month' },
+  { id: 'large', name: 'Large (2GB RAM, 2 vCPU)', cost: '$20-40/month' }
 ];
 
 export default function DeployPage() {
-  const [selectedMethod, setSelectedMethod] = useState('docker');
-  const [activeTab, setActiveTab] = useState('wizard');
-  const [selectedTool, setSelectedTool] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('quick');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [deploymentConfig, setDeploymentConfig] = useState({
-    environment: 'development',
-    cloudProvider: 'aws',
-    region: 'us-east-1',
-    instanceType: 't3.medium',
-    customConfig: ''
+    tool_id: '',
+    template: 'redis',
+    environment: 'production',
+    region: 'us-central1',
+    instance_type: 'small',
+    custom_config: {}
   });
+  
+  // Deployment state
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [currentDeployment, setCurrentDeployment] = useState<DeploymentResponse | null>(null);
+  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus | null>(null);
+  const [userDeployments, setUserDeployments] = useState<UserDeployment[]>([]);
+  const [isLoadingDeployments, setIsLoadingDeployments] = useState(false);
+  
+  // Service health
+  const [serviceHealth, setServiceHealth] = useState<{ status: string; service: string; version: string } | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+
+  // Load user deployments on component mount
+  useEffect(() => {
+    loadUserDeployments();
+    checkServiceHealth();
+  }, []);
+
+  // Check deployment service health
+  const checkServiceHealth = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const health = await deploymentService.checkHealth();
+      setServiceHealth(health);
+    } catch (error) {
+      console.error('Deployment service health check failed:', error);
+      setServiceHealth(null);
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
+  // Load user deployments
+  const loadUserDeployments = async () => {
+    setIsLoadingDeployments(true);
+    try {
+      const result = await deploymentService.listDeployments();
+      setUserDeployments(result.deployments);
+    } catch (error) {
+      console.error('Failed to load deployments:', error);
+    } finally {
+      setIsLoadingDeployments(false);
+    }
+  };
+
+  // Start deployment
+  const startDeployment = async () => {
+    if (!deploymentConfig.tool_id.trim()) {
+      alert('Please enter a tool ID');
+      return;
+    }
+
+    setIsDeploying(true);
+    try {
+      const deploymentRequest: DeploymentRequest = {
+        tool_id: deploymentConfig.tool_id,
+        template: deploymentConfig.template,
+        environment: deploymentConfig.environment,
+        region: deploymentConfig.region,
+        instance_type: deploymentConfig.instance_type,
+        custom_config: deploymentConfig.custom_config
+      };
+
+      const response = await deploymentService.deployTool(deploymentRequest);
+      setCurrentDeployment(response);
+      
+      // Start polling for status
+      pollDeploymentStatus(response.deployment_id);
+      
+    } catch (error) {
+      console.error('Deployment failed:', error);
+      alert('Deployment failed. Please try again.');
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  // Poll deployment status
+  const pollDeploymentStatus = async (deploymentId: string) => {
+    const maxAttempts = 30;
+    let attempts = 0;
+    
+    const poll = async () => {
+      if (attempts >= maxAttempts) {
+        alert('Deployment status polling timed out. Check manually.');
+        return;
+      }
+
+      try {
+        const status = await deploymentService.getDeploymentStatus(deploymentId);
+        setDeploymentStatus(status);
+        
+        if (status.ready || status.status === 'failed' || status.error) {
+          if (status.ready) {
+            alert(`Your deployment is ready at ${status.service_url}`);
+          } else if (status.error) {
+            alert(`Deployment failed: ${status.error}`);
+          }
+          return;
+        }
+        
+        attempts++;
+        setTimeout(poll, 5000); // Poll every 5 seconds
+      } catch (error) {
+        console.error('Status polling failed:', error);
+        attempts++;
+        setTimeout(poll, 5000);
+      }
+    };
+    
+    poll();
+  };
+
+  // Delete deployment
+  const deleteDeployment = async (deploymentId: string) => {
+    try {
+      await deploymentService.deleteDeployment(deploymentId);
+      alert('Deployment deleted successfully');
+      loadUserDeployments(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to delete deployment:', error);
+      alert('Failed to delete deployment');
+    }
+  };
+
+  // Quick deploy a template
+  const quickDeploy = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    setDeploymentConfig(prev => ({
+      ...prev,
+      template: templateId,
+      tool_id: `${templateId}-${Date.now()}`
+    }));
+    setActiveTab('wizard');
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -144,7 +244,19 @@ export default function DeployPage() {
       case 'Monitoring': return <Monitor className="w-4 h-4" />;
       case 'Database': return <Database className="w-4 h-4" />;
       case 'CI/CD': return <Code className="w-4 h-4" />;
+      case 'Cache': return <Server className="w-4 h-4" />;
+      case 'Visualization': return <Monitor className="w-4 h-4" />;
       default: return <Server className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'running': return 'bg-green-100 text-green-800';
+      case 'deploying': return 'bg-blue-100 text-blue-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'deleted': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -181,6 +293,38 @@ export default function DeployPage() {
         </div>
       </div>
 
+      {/* Service Health Status */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Deployment Service:</span>
+              {isCheckingHealth ? (
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              ) : serviceHealth ? (
+                <div className="flex items-center space-x-1">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-600">Healthy</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span className="text-sm text-red-600">Unavailable</span>
+                </div>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={checkServiceHealth}
+              disabled={isCheckingHealth}
+            >
+              {isCheckingHealth ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-purple-50 to-blue-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -199,11 +343,11 @@ export default function DeployPage() {
             </div>
             <div className="flex items-center">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-              Security best practices
+              GCP Cloud Run powered
             </div>
             <div className="flex items-center">
               <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-              Production-ready
+              Cost-effective
             </div>
           </div>
         </div>
@@ -212,98 +356,118 @@ export default function DeployPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="wizard">Deployment Wizard</TabsTrigger>
             <TabsTrigger value="quick">Quick Deploy</TabsTrigger>
-            <TabsTrigger value="custom">Custom Configuration</TabsTrigger>
+            <TabsTrigger value="wizard">Deployment Wizard</TabsTrigger>
+            <TabsTrigger value="deployments">My Deployments</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="quick" className="mt-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Quick Deploy Tools
+                </CardTitle>
+                <CardDescription>
+                  Deploy popular tools with one click using pre-configured templates
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {deploymentTemplates.map((template) => (
+                    <Card key={template.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getCategoryIcon(template.category)}
+                            <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">
+                              {template.name}
+                            </CardTitle>
+                          </div>
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                            Pre-configured
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{template.category}</Badge>
+                          <Badge className={getDifficultyColor(template.complexity)}>
+                            {template.complexity}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <CardDescription>
+                          {template.description}
+                        </CardDescription>
+                        
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-700">Cost:</span>
+                          <div className="text-green-600 font-medium">{template.cost}</div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Est. Time: {template.estimatedTime}</span>
+                        </div>
+
+                        <Button 
+                          className="w-full" 
+                          onClick={() => quickDeploy(template.id)}
+                          disabled={!serviceHealth}
+                        >
+                          <Zap className="w-4 h-4 mr-2" />
+                          Quick Deploy
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="wizard" className="mt-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Deployment Method Selection */}
+              {/* Configuration Form */}
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Settings className="w-5 h-5" />
-                      Choose Deployment Method
+                      Deployment Configuration
                     </CardTitle>
-                    <CardDescription>
-                      Select the deployment method that best fits your needs and infrastructure
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {deploymentOptions.map((option) => (
-                        <Card 
-                          key={option.id} 
-                          className={`cursor-pointer transition-all duration-200 ${
-                            selectedMethod === option.id 
-                              ? 'ring-2 ring-purple-500 border-purple-500' 
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => setSelectedMethod(option.id)}
-                        >
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                                {option.icon}
-                              </div>
-                              <div>
-                                <CardTitle className="text-lg">{option.name}</CardTitle>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge className={getDifficultyColor(option.difficulty)}>
-                                    {option.difficulty}
-                                  </Badge>
-                                  <span className="text-sm text-gray-500">{option.time}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <CardDescription className="mb-3">
-                              {option.description}
-                            </CardDescription>
-                            
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="font-medium text-gray-700">Requirements:</span>
-                                <ul className="mt-1 text-gray-600">
-                                  {option.requirements.map((req, index) => (
-                                    <li key={index} className="flex items-center gap-1">
-                                      <CheckCircle className="w-3 h-3 text-green-500" />
-                                      {req}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                              
-                              <div>
-                                <span className="font-medium text-gray-700">Features:</span>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {option.features.map((feature) => (
-                                    <Badge key={feature} variant="secondary" className="text-xs">
-                                      {feature}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Configuration Form */}
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Configuration</CardTitle>
                     <CardDescription>
                       Configure your deployment settings
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="toolId">Tool ID</Label>
+                      <Input 
+                        id="toolId" 
+                        placeholder="Enter unique tool ID (e.g., my-redis-cache)"
+                        value={deploymentConfig.tool_id}
+                        onChange={(e) => setDeploymentConfig(prev => ({ ...prev, tool_id: e.target.value }))}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="template">Template</Label>
+                      <Select value={deploymentConfig.template} onValueChange={(value) => 
+                        setDeploymentConfig(prev => ({ ...prev, template: value }))
+                      }>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {deploymentTemplates.map((template) => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name} - {template.cost}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="environment">Environment</Label>
@@ -321,74 +485,99 @@ export default function DeployPage() {
                         </Select>
                       </div>
 
-                      {selectedMethod === 'cloud' && (
-                        <>
-                          <div>
-                            <Label htmlFor="cloudProvider">Cloud Provider</Label>
-                            <Select value={deploymentConfig.cloudProvider} onValueChange={(value) => 
-                              setDeploymentConfig(prev => ({ ...prev, cloudProvider: value }))
-                            }>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="aws">Amazon Web Services</SelectItem>
-                                <SelectItem value="gcp">Google Cloud Platform</SelectItem>
-                                <SelectItem value="azure">Microsoft Azure</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                      <div>
+                        <Label htmlFor="region">Region</Label>
+                        <Select value={deploymentConfig.region} onValueChange={(value) => 
+                          setDeploymentConfig(prev => ({ ...prev, region: value }))
+                        }>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {defaultRegions.map((region) => (
+                              <SelectItem key={region.id} value={region.id}>
+                                {region.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                          <div>
-                            <Label htmlFor="region">Region</Label>
-                            <Select value={deploymentConfig.region} onValueChange={(value) => 
-                              setDeploymentConfig(prev => ({ ...prev, region: value }))
-                            }>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="us-east-1">US East (N. Virginia)</SelectItem>
-                                <SelectItem value="us-west-2">US West (Oregon)</SelectItem>
-                                <SelectItem value="eu-west-1">Europe (Ireland)</SelectItem>
-                                <SelectItem value="ap-southeast-1">Asia Pacific (Singapore)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          
-                          </div>
-
-                          <div>
-                            <Label htmlFor="instanceType">Instance Type</Label>
-                            <Select value={deploymentConfig.instanceType} onValueChange={(value) => 
-                              setDeploymentConfig(prev => ({ ...prev, instanceType: value }))
-                            }>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="t3.micro">t3.micro (1 vCPU, 1GB RAM)</SelectItem>
-                                <SelectItem value="t3.small">t3.small (2 vCPU, 2GB RAM)</SelectItem>
-                                <SelectItem value="t3.medium">t3.medium (2 vCPU, 4GB RAM)</SelectItem>
-                                <SelectItem value="t3.large">t3.large (2 vCPU, 8GB RAM)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="customConfig">Custom Configuration (Optional)</Label>
-                      <Textarea
-                        id="customConfig"
-                        placeholder="Add any custom configuration or environment variables..."
-                        value={deploymentConfig.customConfig}
-                        onChange={(e) => setDeploymentConfig(prev => ({ ...prev, customConfig: e.target.value }))}
-                        rows={4}
-                      />
+                      <div>
+                        <Label htmlFor="instanceType">Instance Type</Label>
+                        <Select value={deploymentConfig.instance_type} onValueChange={(value) => 
+                          setDeploymentConfig(prev => ({ ...prev, instance_type: value }))
+                        }>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {defaultInstanceTypes.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                {type.name} - {type.cost}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Current Deployment Status */}
+                {currentDeployment && (
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Current Deployment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Deployment ID:</span>
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                            {currentDeployment.deployment_id}
+                          </code>
+                        </div>
+                        
+                        {deploymentStatus && (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">Status:</span>
+                              <Badge className={getStatusColor(deploymentStatus.status)}>
+                                {deploymentStatus.status}
+                              </Badge>
+                            </div>
+                            
+                            {deploymentStatus.service_url && (
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">Service URL:</span>
+                                <a 
+                                  href={deploymentStatus.service_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                >
+                                  {deploymentStatus.service_url}
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Cost Estimate:</span>
+                          <span className="text-green-600 font-medium">
+                            {currentDeployment.cost_estimate.monthly_estimate}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Deployment Summary */}
@@ -399,9 +588,9 @@ export default function DeployPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <span className="text-sm font-medium text-gray-700">Method:</span>
+                      <span className="text-sm font-medium text-gray-700">Template:</span>
                       <div className="font-medium">
-                        {deploymentOptions.find(opt => opt.id === selectedMethod)?.name}
+                        {deploymentTemplates.find(t => t.id === deploymentConfig.template)?.name}
                       </div>
                     </div>
                     
@@ -410,27 +599,40 @@ export default function DeployPage() {
                       <div className="font-medium capitalize">{deploymentConfig.environment}</div>
                     </div>
 
-                    {selectedMethod === 'cloud' && (
-                      <>
-                        <div>
-                          <span className="text-sm font-medium text-gray-700">Provider:</span>
-                          <div className="font-medium">{deploymentConfig.cloudProvider.toUpperCase()}</div>
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-gray-700">Region:</span>
-                          <div className="font-medium">{deploymentConfig.region}</div>
-                        </div>
-                      </>
-                    )}
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Region:</span>
+                      <div className="font-medium">{deploymentConfig.region}</div>
+                    </div>
+
+                    <div>
+                      <span className="text-sm font-medium text-gray-700">Instance Type:</span>
+                      <div className="font-medium">
+                        {defaultInstanceTypes.find(t => t.id === deploymentConfig.instance_type)?.name}
+                      </div>
+                    </div>
 
                     <div className="pt-4 border-t">
                       <div className="text-sm text-gray-600 mb-4">
-                        Estimated deployment time: {deploymentOptions.find(opt => opt.id === selectedMethod)?.time}
+                        Estimated cost: {deploymentTemplates.find(t => t.id === deploymentConfig.template)?.cost}
                       </div>
                       
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-blue-600" size="lg">
-                        <Play className="w-4 h-4 mr-2" />
-                        Start Deployment
+                      <Button 
+                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600" 
+                        size="lg"
+                        onClick={startDeployment}
+                        disabled={isDeploying || !serviceHealth || !deploymentConfig.tool_id.trim()}
+                      >
+                        {isDeploying ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Deploying...
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 mr-2" />
+                            Start Deployment
+                          </>
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -439,148 +641,71 @@ export default function DeployPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="quick" className="mt-8">
+          <TabsContent value="deployments" className="mt-8">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5" />
-                  Quick Deploy Tools
+                  <Server className="w-5 h-5" />
+                  My Deployments
                 </CardTitle>
                 <CardDescription>
-                  Deploy popular tools with one click using pre-configured templates
+                  Manage your active deployments
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {quickDeployTools.map((tool) => (
-                    <Card key={tool.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
-                      <CardHeader className="pb-3">
+                {isLoadingDeployments ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                ) : userDeployments.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Server className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No deployments found</p>
+                    <p className="text-sm">Start by deploying your first tool</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userDeployments.map((deployment) => (
+                      <Card key={deployment.deployment_id} className="p-4">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getCategoryIcon(tool.category)}
-                            <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">
-                              {tool.name}
-                            </CardTitle>
-                          </div>
-                          {tool.preconfigured && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                              Pre-configured
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{tool.category}</Badge>
-                          <Badge className={getDifficultyColor(tool.complexity)}>
-                            {tool.complexity}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <CardDescription>
-                          {tool.description}
-                        </CardDescription>
-                        
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-700">Deployment Methods:</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {tool.deploymentMethods.map((method) => (
-                              <Badge key={method} variant="secondary" className="text-xs">
-                                {method}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-medium">{deployment.tool_id}</h3>
+                              <Badge className={getStatusColor(deployment.status)}>
+                                {deployment.status}
                               </Badge>
-                            ))}
+                              <Badge variant="outline">{deployment.template}</Badge>
+                            </div>
+                            <div className="text-sm text-gray-600 space-y-1">
+                              <div>Created: {new Date(deployment.created_at).toLocaleDateString()}</div>
+                              <div>Cost: {deployment.cost_estimate}</div>
+                              {deployment.service_url && (
+                                <a 
+                                  href={deployment.service_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                >
+                                  {deployment.service_url}
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteDeployment(deployment.deployment_id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>Est. Time: {tool.estimatedTime}</span>
-                        </div>
-
-                        <Button 
-                          className="w-full" 
-                          onClick={() => setSelectedTool(tool.id)}
-                        >
-                          <Zap className="w-4 h-4 mr-2" />
-                          Quick Deploy
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="custom" className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Code className="w-5 h-5" />
-                  Custom Configuration
-                </CardTitle>
-                <CardDescription>
-                  Create a custom deployment configuration for your specific needs
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="toolName">Tool/Service Name</Label>
-                    <Input id="toolName" placeholder="Enter tool name..." />
+                      </Card>
+                    ))}
                   </div>
-                  <div>
-                    <Label htmlFor="version">Version</Label>
-                    <Input id="version" placeholder="latest" />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="dockerImage">Docker Image</Label>
-                  <Input id="dockerImage" placeholder="nginx:latest" />
-                </div>
-
-                <div>
-                  <Label htmlFor="ports">Port Mappings</Label>
-                  <Input id="ports" placeholder="80:8080, 443:8443" />
-                </div>
-
-                <div>
-                  <Label htmlFor="envVars">Environment Variables</Label>
-                  <Textarea
-                    id="envVars"
-                    placeholder="KEY1=value1&#10;KEY2=value2"
-                    rows={4}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="volumes">Volume Mounts</Label>
-                  <Textarea
-                    id="volumes"
-                    placeholder="/host/path:/container/path&#10;/data:/app/data"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customYaml">Custom YAML Configuration</Label>
-                  <Textarea
-                    id="customYaml"
-                    placeholder="Add custom Kubernetes YAML or Docker Compose configuration..."
-                    rows={8}
-                    className="font-mono text-sm"
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <Button variant="outline" className="flex-1">
-                    <Code className="w-4 h-4 mr-2" />
-                    Validate Configuration
-                  </Button>
-                  <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600">
-                    <Play className="w-4 h-4 mr-2" />
-                    Deploy Custom Configuration
-                  </Button>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
