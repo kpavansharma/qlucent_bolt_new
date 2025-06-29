@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Grid, List, Star, Download, Github, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, Download, Github, ExternalLink, Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { toolService, ToolSearchParams } from '@/lib/services/toolService';
 import { Tool } from '@/lib/types/api';
 import { useApi } from '@/lib/hooks/useApi';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Navigation } from '@/components/navigation';
 import Link from 'next/link';
 
@@ -21,6 +21,7 @@ const licenses = ['All', 'MIT', 'Apache 2.0', 'GPL', 'BSD', 'Other'];
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams.get('query') || '';
   const initialCategory = searchParams.get('category') || 'All';
   
@@ -33,15 +34,7 @@ export default function SearchPage() {
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [showDeploymentReady, setShowDeploymentReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [allTools, setAllTools] = useState<Tool[]>([]);
-  const [filteredTools, setFilteredTools] = useState<Tool[]>([]);
-  const [useClientSideFiltering, setUseClientSideFiltering] = useState(false);
-
-  // Fetch all tools for client-side filtering
-  const { data: allToolsResponse, loading: allToolsLoading } = useApi(
-    () => toolService.getTools({ limit: 1000 }),
-    []
-  );
+  const [searchTriggered, setSearchTriggered] = useState(false);
 
   // Build search parameters for backend
   const toolSearchParams: ToolSearchParams = {
@@ -56,97 +49,29 @@ export default function SearchPage() {
     limit: 12
   };
 
-  // Fetch tools from backend using search
+  // Fetch tools from backend using enhanced search
   const { data: toolsResponse, loading, error, refetch } = useApi(
-    () => toolService.searchTools(searchQuery || '', toolSearchParams),
-    [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
+    () => {
+      // Only search if we have a query, category filter, or other filters
+      if (searchQuery || selectedCategory !== 'All' || selectedLicense !== 'All' || 
+          minStars[0] > 0 || showVerifiedOnly || showDeploymentReady || searchTriggered) {
+        console.log('🔍 Triggering search with params:', toolSearchParams);
+        return toolService.searchTools(searchQuery || '', toolSearchParams);
+      }
+      // Return empty result if no search criteria
+      return Promise.resolve({
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 12,
+        totalPages: 0
+      });
+    },
+    [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage, searchTriggered]
   );
 
-  // Store all tools for client-side filtering
-  useEffect(() => {
-    if (allToolsResponse?.items) {
-      setAllTools(allToolsResponse.items);
-    }
-  }, [allToolsResponse]);
-
-  // Client-side filtering function
-  const filterToolsClientSide = (tools: Tool[]) => {
-    let filtered = [...tools];
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(tool => 
-        tool.name.toLowerCase().includes(query) ||
-        tool.description.toLowerCase().includes(query) ||
-        tool.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Filter by category
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter(tool => tool.category === selectedCategory);
-    }
-
-    // Filter by license
-    if (selectedLicense !== 'All') {
-      filtered = filtered.filter(tool => tool.license === selectedLicense);
-    }
-
-    // Filter by minimum stars
-    if (minStars[0] > 0) {
-      filtered = filtered.filter(tool => tool.stars >= minStars[0] * 1000);
-    }
-
-    // Filter by verified status
-    if (showVerifiedOnly) {
-      filtered = filtered.filter(tool => tool.verified);
-    }
-
-    // Filter by deployment ready
-    if (showDeploymentReady) {
-      filtered = filtered.filter(tool => tool.deploymentReady);
-    }
-
-    // Sort results
-    switch (sortBy) {
-      case 'stars':
-        filtered.sort((a, b) => b.stars - a.stars);
-        break;
-      case 'downloads':
-        filtered.sort((a, b) => b.downloads - a.downloads);
-        break;
-      case 'aiScore':
-        filtered.sort((a, b) => b.aiScore - a.aiScore);
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        // Relevance sorting (keep original order for now)
-        break;
-    }
-
-    return filtered;
-  };
-
-  // Determine which tools to display
-  useEffect(() => {
-    if (useClientSideFiltering && allTools.length > 0) {
-      const filtered = filterToolsClientSide(allTools);
-      setFilteredTools(filtered);
-    } else if (toolsResponse?.items) {
-      setFilteredTools(toolsResponse.items);
-    }
-  }, [useClientSideFiltering, allTools, toolsResponse, searchQuery, selectedCategory, selectedLicense, minStars, sortBy, showVerifiedOnly, showDeploymentReady]);
-
-  // Check if backend search is working, fallback to client-side
-  useEffect(() => {
-    if (error && !useClientSideFiltering && allTools.length > 0) {
-      console.log('⚠️ Backend search failed, switching to client-side filtering');
-      setUseClientSideFiltering(true);
-    }
-  }, [error, useClientSideFiltering, allTools.length]);
+  const tools = toolsResponse?.items || [];
+  const totalPages = toolsResponse?.totalPages || 1;
 
   // Reset page when filters change
   useEffect(() => {
@@ -157,14 +82,51 @@ export default function SearchPage() {
   useEffect(() => {
     if (initialQuery && initialQuery !== searchQuery) {
       setSearchQuery(initialQuery);
+      setSearchTriggered(true);
     }
     if (initialCategory && initialCategory !== selectedCategory) {
       setSelectedCategory(initialCategory);
+      setSearchTriggered(true);
     }
   }, [initialQuery, initialCategory]);
 
-  const tools = filteredTools;
-  const totalPages = useClientSideFiltering ? Math.ceil(tools.length / 12) : (toolsResponse?.totalPages || 1);
+  // Handle search form submission
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    setSearchTriggered(true);
+    setCurrentPage(1);
+    
+    // Update URL with search parameters
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('query', searchQuery);
+    if (selectedCategory !== 'All') params.set('category', selectedCategory);
+    
+    const newUrl = `/search${params.toString() ? '?' + params.toString() : ''}`;
+    router.push(newUrl, { scroll: false });
+  };
+
+  // Handle category change
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setSearchTriggered(true);
+    setCurrentPage(1);
+  };
+
+  // Handle clear filters
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setSelectedLicense('All');
+    setMinStars([0]);
+    setSortBy('relevance');
+    setShowVerifiedOnly(false);
+    setShowDeploymentReady(false);
+    setCurrentPage(1);
+    setSearchTriggered(false);
+    router.push('/search', { scroll: false });
+  };
 
   const ToolCard = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-lg transition-all duration-300 group cursor-pointer bg-card border-border">
@@ -288,6 +250,36 @@ export default function SearchPage() {
     <div className="min-h-screen bg-background">
       <Navigation currentPage="search" />
       
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            Discover Developer Tools
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Search through thousands of tools with AI-powered recommendations. 
+            Find the perfect tools for your tech stack and use case.
+          </p>
+          
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search tools, frameworks, or describe your needs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-3"
+              />
+            </div>
+            <Button type="submit" className="bg-gradient-to-r from-purple-600 to-blue-600 px-8">
+              <Search className="w-4 h-4 mr-2" />
+              Search Tools
+            </Button>
+          </form>
+        </div>
+      </section>
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Filters Sidebar */}
@@ -300,24 +292,10 @@ export default function SearchPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Search */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Search</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Search tools..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-
                 {/* Category Filter */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Category</label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <Select value={selectedCategory} onValueChange={handleCategoryChange}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -407,15 +385,7 @@ export default function SearchPage() {
                 {/* Clear Filters */}
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All');
-                    setSelectedLicense('All');
-                    setMinStars([0]);
-                    setSortBy('relevance');
-                    setShowVerifiedOnly(false);
-                    setShowDeploymentReady(false);
-                  }}
+                  onClick={handleClearFilters}
                   className="w-full"
                 >
                   Clear Filters
@@ -429,13 +399,22 @@ export default function SearchPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Discover Tools</h1>
+                <h2 className="text-2xl font-bold text-foreground">Search Results</h2>
                 <p className="text-muted-foreground">
-                  {loading || allToolsLoading ? 'Loading...' : `${tools.length} tools found`}
-                  {useClientSideFiltering && ' (client-side filtering)'}
+                  {loading ? 'Searching...' : `${tools.length} tools found`}
+                  {searchQuery && ` for "${searchQuery}"`}
+                  {selectedCategory !== 'All' && ` in ${selectedCategory}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetch()}
+                  disabled={loading}
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
                   size="sm"
@@ -454,27 +433,49 @@ export default function SearchPage() {
             </div>
 
             {/* Loading State */}
-            {(loading || allToolsLoading) && (
+            {loading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-                <span className="ml-2 text-muted-foreground">Loading tools...</span>
+                <span className="ml-2 text-muted-foreground">Searching tools...</span>
               </div>
             )}
 
             {/* Error State */}
-            {error && !useClientSideFiltering && (
+            {error && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">Failed to load tools from server</p>
+                <p className="text-muted-foreground mb-4">Failed to load tools: {error}</p>
                 <Button onClick={() => refetch()}>Retry</Button>
               </div>
             )}
 
+            {/* No Search Criteria */}
+            {!loading && !error && !searchTriggered && (
+              <div className="text-center py-12">
+                <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Start Your Search</h3>
+                <p className="text-muted-foreground mb-4">
+                  Enter a search term, select a category, or apply filters to discover tools
+                </p>
+                <Button onClick={handleSearch}>
+                  <Search className="w-4 h-4 mr-2" />
+                  Search All Tools
+                </Button>
+              </div>
+            )}
+
             {/* Results */}
-            {!loading && !allToolsLoading && (
+            {!loading && !error && searchTriggered && (
               <>
                 {tools.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground">No tools found matching your criteria</p>
+                    <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No tools found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Try adjusting your search criteria or filters
+                    </p>
+                    <Button onClick={handleClearFilters}>
+                      Clear Filters
+                    </Button>
                   </div>
                 ) : (
                   <>

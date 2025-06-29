@@ -30,7 +30,7 @@ class ApiClient {
       method: options.method || 'GET',
       url,
       headers: options.headers,
-      body: options.body
+      body: options.body ? JSON.parse(options.body as string) : undefined
     });
     
     const defaultHeaders = {
@@ -106,8 +106,13 @@ class ApiClient {
     if (params) {
       console.log('🔍 Adding query parameters:', params);
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
+        if (value !== undefined && value !== null && value !== '') {
+          // Handle array parameters (for multiple categories, tags, etc.)
+          if (Array.isArray(value)) {
+            value.forEach(v => url.searchParams.append(key, String(v)));
+          } else {
+            url.searchParams.append(key, String(value));
+          }
         }
       });
     }
