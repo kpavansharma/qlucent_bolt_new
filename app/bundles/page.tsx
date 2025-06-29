@@ -311,9 +311,9 @@ export default function BundlesPage() {
                       <div>
                         <p className="text-sm font-medium text-foreground mb-2">Included Tools ({(bundle.tools || []).length}):</p>
                         <div className="flex flex-wrap gap-1">
-                          {(bundle.tools || []).slice(0, 4).map((tool) => (
-                            <Badge key={tool} variant="secondary" className="text-xs">
-                              {tool}
+                          {(bundle.tools || []).slice(0, 4).map((tool: any, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {typeof tool === 'string' ? tool : tool.name || 'Unknown Tool'}
                             </Badge>
                           ))}
                           {(bundle.tools || []).length > 4 && (
@@ -423,14 +423,14 @@ export default function BundlesPage() {
                         <div>
                           <p className="text-xs font-medium text-foreground mb-1">Tools ({(bundle.tools || []).length}):</p>
                           <div className="flex flex-wrap gap-1">
-                            {(bundle.tools || []).slice(0, 3).map((tool) => (
-                              <Badge key={tool} variant="secondary" className="text-xs">
-                                {tool}
+                            {(bundle.tools || []).slice(0, 4).map((tool: any, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {typeof tool === 'string' ? tool : tool.name || 'Unknown Tool'}
                               </Badge>
                             ))}
-                            {(bundle.tools || []).length > 3 && (
+                            {(bundle.tools || []).length > 4 && (
                               <Badge variant="secondary" className="text-xs">
-                                +{(bundle.tools || []).length - 3}
+                                +{(bundle.tools || []).length - 4} more
                               </Badge>
                             )}
                           </div>
