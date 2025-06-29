@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Navigation } from '@/components/navigation';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { deploymentService, DeploymentRequest, DeploymentResponse, DeploymentStatus, DeploymentTemplate, DeploymentRegion, InstanceType, UserDeployment } from '@/lib/services/deploymentService';
 
@@ -97,7 +98,7 @@ export default function DeployPage() {
   });
   
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Deployment state
@@ -117,15 +118,15 @@ export default function DeployPage() {
     checkServiceHealth();
   }, []);
 
-  // Check if user is authenticated
-  const checkAuthentication = () => {
+  // Check if user is authenticated using Supabase
+  const checkAuthentication = async () => {
     setIsCheckingAuth(true);
     try {
-      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-      setIsAuthenticated(!!token);
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
     } catch (error) {
       console.error('Error checking authentication:', error);
-      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsCheckingAuth(false);
     }
@@ -147,11 +148,11 @@ export default function DeployPage() {
 
   // Load user deployments
   const loadUserDeployments = async () => {
-    if (!isAuthenticated) return;
+    if (!user) return;
     
     setIsLoadingDeployments(true);
     try {
-      const result = await deploymentService.listDeployments();
+      const result = await deploymentService.listDeployments(user.id);
       setUserDeployments(result.deployments);
     } catch (error) {
       console.error('Failed to load deployments:', error);
@@ -162,7 +163,7 @@ export default function DeployPage() {
 
   // Start deployment
   const startDeployment = async () => {
-    if (!isAuthenticated) {
+    if (!user) {
       alert('Please register or login to deploy tools.');
       return;
     }
@@ -247,7 +248,7 @@ export default function DeployPage() {
 
   // Quick deploy a template
   const quickDeploy = (templateId: string) => {
-    if (!isAuthenticated) {
+    if (!user) {
       alert('Please register or login to deploy tools.');
       return;
     }
@@ -334,7 +335,7 @@ export default function DeployPage() {
   }
 
   // Show authentication required if not authenticated
-  if (!isAuthenticated) {
+  if (!user) {
     return <AuthenticationRequired />;
   }
 
