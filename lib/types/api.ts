@@ -1,6 +1,6 @@
 // Common types for API responses
 export interface Tool {
-  id: number;
+  id: string;
   name: string;
   description: string;
   category: string;
