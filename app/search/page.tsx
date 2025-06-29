@@ -34,14 +34,13 @@ export default function SearchPage() {
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
   const [showDeploymentReady, setShowDeploymentReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTriggered, setSearchTriggered] = useState(false);
 
-  // Build search parameters for backend
+  // Build search parameters for backend - simplified
   const toolSearchParams: ToolSearchParams = {
     query: searchQuery || undefined,
     category: selectedCategory !== 'All' ? selectedCategory : undefined,
     license: selectedLicense !== 'All' ? selectedLicense : undefined,
-    minStars: minStars[0] * 1000,
+    minStars: minStars[0] > 0 ? minStars[0] * 1000 : undefined,
     verified: showVerifiedOnly || undefined,
     deploymentReady: showDeploymentReady || undefined,
     sortBy: sortBy !== 'relevance' ? sortBy : undefined,
@@ -49,25 +48,13 @@ export default function SearchPage() {
     limit: 12
   };
 
-  // Fetch tools from backend
+  // Fetch tools from backend - always fetch when parameters change
   const { data: toolsResponse, loading, error, refetch } = useApi(
     () => {
-      // Only search if we have criteria or search was triggered
-      if (searchQuery || selectedCategory !== 'All' || selectedLicense !== 'All' || 
-          minStars[0] > 0 || showVerifiedOnly || showDeploymentReady || searchTriggered) {
-        console.log('🔍 Triggering search with params:', toolSearchParams);
-        return toolService.searchTools(searchQuery || '', toolSearchParams);
-      }
-      // Return empty result if no search criteria
-      return Promise.resolve({
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 12,
-        totalPages: 0
-      });
+      console.log('🔍 Fetching tools with params:', toolSearchParams);
+      return toolService.getTools(toolSearchParams);
     },
-    [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage, searchTriggered]
+    [searchQuery, selectedCategory, selectedLicense, minStars[0], sortBy, showVerifiedOnly, showDeploymentReady, currentPage]
   );
 
   const tools = toolsResponse?.items || [];
@@ -82,11 +69,9 @@ export default function SearchPage() {
   useEffect(() => {
     if (initialQuery && initialQuery !== searchQuery) {
       setSearchQuery(initialQuery);
-      setSearchTriggered(true);
     }
     if (initialCategory && initialCategory !== selectedCategory) {
       setSelectedCategory(initialCategory);
-      setSearchTriggered(true);
     }
   }, [initialQuery, initialCategory]);
 
@@ -95,7 +80,6 @@ export default function SearchPage() {
     if (e) {
       e.preventDefault();
     }
-    setSearchTriggered(true);
     setCurrentPage(1);
     
     // Update URL with search parameters
@@ -109,8 +93,8 @@ export default function SearchPage() {
 
   // Handle category change
   const handleCategoryChange = (category: string) => {
+    console.log('🎯 Category changed to:', category);
     setSelectedCategory(category);
-    setSearchTriggered(true);
     setCurrentPage(1);
   };
 
@@ -124,7 +108,6 @@ export default function SearchPage() {
     setShowVerifiedOnly(false);
     setShowDeploymentReady(false);
     setCurrentPage(1);
-    setSearchTriggered(false);
     router.push('/search', { scroll: false });
   };
 
@@ -398,7 +381,7 @@ export default function SearchPage() {
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Search Results</h2>
                 <p className="text-muted-foreground">
-                  {loading ? 'Searching...' : `${tools.length} tools found`}
+                  {loading ? 'Searching...' : 'Discover tools for your project'}
                   {searchQuery && ` for "${searchQuery}"`}
                   {selectedCategory !== 'All' && ` in ${selectedCategory}`}
                 </p>
@@ -445,23 +428,8 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* No Search Criteria */}
-            {!loading && !error && !searchTriggered && (
-              <div className="text-center py-12">
-                <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">Start Your Search</h3>
-                <p className="text-muted-foreground mb-4">
-                  Enter a search term, select a category, or apply filters to discover tools
-                </p>
-                <Button onClick={handleSearch}>
-                  <Search className="w-4 h-4 mr-2" />
-                  Search All Tools
-                </Button>
-              </div>
-            )}
-
             {/* Results */}
-            {!loading && !error && searchTriggered && (
+            {!loading && !error && (
               <>
                 {tools.length === 0 ? (
                   <div className="text-center py-12">
