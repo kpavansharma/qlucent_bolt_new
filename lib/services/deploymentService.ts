@@ -82,12 +82,57 @@ class DeploymentService {
   }
 
   /**
+   * Check if user is authenticated
+   */
+  private isAuthenticated(): boolean {
+    // Check if user has a valid session/token
+    // This is a simple check - you might want to integrate with your auth system
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+    return !!token;
+  }
+
+  /**
+   * Make direct fetch request to deployment service
+   */
+  private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    };
+
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
    * Deploy a tool to GCP Cloud Run
    */
   async deployTool(request: DeploymentRequest): Promise<DeploymentResponse> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required. Please register or login to deploy tools.');
+    }
+
     try {
-      const response = await apiClient.post(`${this.baseUrl}/api/deploy`, request);
-      return response.data as DeploymentResponse;
+      const response = await this.makeRequest<DeploymentResponse>('/api/deploy', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+      return response;
     } catch (error) {
       console.error('Deployment failed:', error);
       throw new Error('Failed to deploy tool. Please try again.');
@@ -98,9 +143,13 @@ class DeploymentService {
    * Get deployment status
    */
   async getDeploymentStatus(deploymentId: string): Promise<DeploymentStatus> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required.');
+    }
+
     try {
-      const response = await apiClient.get(`${this.baseUrl}/api/deploy/${deploymentId}/status`);
-      return response.data as DeploymentStatus;
+      const response = await this.makeRequest<DeploymentStatus>(`/api/deploy/${deploymentId}/status`);
+      return response;
     } catch (error) {
       console.error('Failed to get deployment status:', error);
       throw new Error('Failed to get deployment status.');
@@ -111,9 +160,15 @@ class DeploymentService {
    * Delete deployment to save costs
    */
   async deleteDeployment(deploymentId: string): Promise<{ status: string; message: string }> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required.');
+    }
+
     try {
-      const response = await apiClient.delete(`${this.baseUrl}/api/deploy/${deploymentId}`);
-      return response.data as { status: string; message: string };
+      const response = await this.makeRequest<{ status: string; message: string }>(`/api/deploy/${deploymentId}`, {
+        method: 'DELETE',
+      });
+      return response;
     } catch (error) {
       console.error('Failed to delete deployment:', error);
       throw new Error('Failed to delete deployment.');
@@ -125,9 +180,8 @@ class DeploymentService {
    */
   async getAvailableTemplates(): Promise<DeploymentTemplate[]> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/api/templates`);
-      const data = response.data as { templates: DeploymentTemplate[] };
-      return data.templates;
+      const response = await this.makeRequest<{ templates: DeploymentTemplate[] }>('/api/templates');
+      return response.templates;
     } catch (error) {
       console.error('Failed to get templates:', error);
       // Return default templates if API fails
@@ -140,9 +194,8 @@ class DeploymentService {
    */
   async getAvailableRegions(): Promise<DeploymentRegion[]> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/api/regions`);
-      const data = response.data as { regions: DeploymentRegion[] };
-      return data.regions;
+      const response = await this.makeRequest<{ regions: DeploymentRegion[] }>('/api/regions');
+      return response.regions;
     } catch (error) {
       console.error('Failed to get regions:', error);
       // Return default regions if API fails
@@ -155,9 +208,8 @@ class DeploymentService {
    */
   async getAvailableInstanceTypes(): Promise<InstanceType[]> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/api/instance-types`);
-      const data = response.data as { instance_types: InstanceType[] };
-      return data.instance_types;
+      const response = await this.makeRequest<{ instance_types: InstanceType[] }>('/api/instance-types');
+      return response.instance_types;
     } catch (error) {
       console.error('Failed to get instance types:', error);
       // Return default instance types if API fails
@@ -169,9 +221,13 @@ class DeploymentService {
    * Get deployment logs
    */
   async getDeploymentLogs(deploymentId: string): Promise<DeploymentLogs> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required.');
+    }
+
     try {
-      const response = await apiClient.get(`${this.baseUrl}/api/deploy/${deploymentId}/logs`);
-      return response.data as DeploymentLogs;
+      const response = await this.makeRequest<DeploymentLogs>(`/api/deploy/${deploymentId}/logs`);
+      return response;
     } catch (error) {
       console.error('Failed to get deployment logs:', error);
       throw new Error('Failed to get deployment logs.');
@@ -182,13 +238,17 @@ class DeploymentService {
    * List user deployments
    */
   async listDeployments(userId?: string, limit: number = 20): Promise<DeploymentsList> {
+    if (!this.isAuthenticated()) {
+      throw new Error('Authentication required.');
+    }
+
     try {
       const params = new URLSearchParams();
       if (userId) params.append('user_id', userId);
       params.append('limit', limit.toString());
 
-      const response = await apiClient.get(`${this.baseUrl}/api/deployments?${params}`);
-      return response.data as DeploymentsList;
+      const response = await this.makeRequest<DeploymentsList>(`/api/deployments?${params}`);
+      return response;
     } catch (error) {
       console.error('Failed to list deployments:', error);
       throw new Error('Failed to list deployments.');
@@ -200,8 +260,8 @@ class DeploymentService {
    */
   async checkHealth(): Promise<{ status: string; service: string; version: string }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/health`);
-      return response.data as { status: string; service: string; version: string };
+      const response = await this.makeRequest<{ status: string; service: string; version: string }>('/health');
+      return response;
     } catch (error) {
       console.error('Deployment service health check failed:', error);
       throw new Error('Deployment service is unavailable.');
