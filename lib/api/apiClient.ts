@@ -119,6 +119,7 @@ class ApiClient {
 
     const finalEndpoint = url.pathname + url.search;
     console.log('📋 Final GET endpoint:', finalEndpoint);
+    console.log('🎯 Query parameters sent to backend:', Object.fromEntries(url.searchParams.entries()));
     
     return this.request<T>(finalEndpoint);
   }

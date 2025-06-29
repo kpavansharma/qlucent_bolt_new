@@ -49,10 +49,10 @@ export default function SearchPage() {
     limit: 12
   };
 
-  // Fetch tools from backend using enhanced search
+  // Fetch tools from backend
   const { data: toolsResponse, loading, error, refetch } = useApi(
     () => {
-      // Only search if we have a query, category filter, or other filters
+      // Only search if we have criteria or search was triggered
       if (searchQuery || selectedCategory !== 'All' || selectedLicense !== 'All' || 
           minStars[0] > 0 || showVerifiedOnly || showDeploymentReady || searchTriggered) {
         console.log('🔍 Triggering search with params:', toolSearchParams);
@@ -162,9 +162,6 @@ export default function SearchPage() {
               <Download className="w-4 h-4 mr-1" />
               {tool.downloads}
             </div>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Updated {new Date(tool.lastUpdated).toLocaleDateString()}
           </div>
         </div>
 
