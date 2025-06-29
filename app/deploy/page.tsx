@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Zap, Cloud, Server, Settings, CheckCircle, ArrowRight, Play, Code, Database, Monitor, Loader2, ExternalLink, Trash2, AlertCircle } from 'lucide-react';
+import { Zap, Cloud, Server, Settings, CheckCircle, ArrowRight, Play, Code, Database, Monitor, Loader2, ExternalLink, Trash2, AlertCircle, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Navigation } from '@/components/navigation';
 import Link from 'next/link';
 import { deploymentService, DeploymentRequest, DeploymentResponse, DeploymentStatus, DeploymentTemplate, DeploymentRegion, InstanceType, UserDeployment } from '@/lib/services/deploymentService';
 
@@ -95,6 +96,10 @@ export default function DeployPage() {
     custom_config: {}
   });
   
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
   // Deployment state
   const [isDeploying, setIsDeploying] = useState(false);
   const [currentDeployment, setCurrentDeployment] = useState<DeploymentResponse | null>(null);
@@ -106,11 +111,25 @@ export default function DeployPage() {
   const [serviceHealth, setServiceHealth] = useState<{ status: string; service: string; version: string } | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
 
-  // Load user deployments on component mount
+  // Check authentication on component mount
   useEffect(() => {
-    loadUserDeployments();
+    checkAuthentication();
     checkServiceHealth();
   }, []);
+
+  // Check if user is authenticated
+  const checkAuthentication = () => {
+    setIsCheckingAuth(true);
+    try {
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      setIsAuthenticated(!!token);
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
 
   // Check deployment service health
   const checkServiceHealth = async () => {
@@ -128,6 +147,8 @@ export default function DeployPage() {
 
   // Load user deployments
   const loadUserDeployments = async () => {
+    if (!isAuthenticated) return;
+    
     setIsLoadingDeployments(true);
     try {
       const result = await deploymentService.listDeployments();
@@ -141,6 +162,11 @@ export default function DeployPage() {
 
   // Start deployment
   const startDeployment = async () => {
+    if (!isAuthenticated) {
+      alert('Please register or login to deploy tools.');
+      return;
+    }
+
     if (!deploymentConfig.tool_id.trim()) {
       alert('Please enter a tool ID');
       return;
@@ -221,6 +247,11 @@ export default function DeployPage() {
 
   // Quick deploy a template
   const quickDeploy = (templateId: string) => {
+    if (!isAuthenticated) {
+      alert('Please register or login to deploy tools.');
+      return;
+    }
+    
     setSelectedTemplate(templateId);
     setDeploymentConfig(prev => ({
       ...prev,
@@ -260,38 +291,56 @@ export default function DeployPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Qlucent.ai
-              </span>
-            </Link>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/search" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Discover
-              </Link>
-              <Link href="/bundles" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Bundles
-              </Link>
-              <Link href="/vendors" className="text-gray-600 hover:text-gray-900 transition-colors">
-                Vendors
-              </Link>
-              <Link href="/deploy" className="text-purple-600 font-medium">
-                Deploy
-              </Link>
-            </nav>
+  // Authentication required component
+  const AuthenticationRequired = () => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-8 h-8 text-white" />
           </div>
+          <CardTitle className="text-2xl">Authentication Required</CardTitle>
+          <CardDescription>
+            You need to register or login to access the deployment features.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button asChild className="w-full">
+            <Link href="/auth">
+              <User className="w-4 h-4 mr-2" />
+              Register / Login
+            </Link>
+          </Button>
+          <Button variant="outline" asChild className="w-full">
+            <Link href="/">
+              Back to Home
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Loading component
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Checking authentication...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show authentication required if not authenticated
+  if (!isAuthenticated) {
+    return <AuthenticationRequired />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation currentPage="deploy" />
 
       {/* Service Health Status */}
       <div className="bg-white border-b">
