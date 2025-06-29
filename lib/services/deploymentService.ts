@@ -7,6 +7,7 @@ export interface DeploymentRequest {
   region?: string;
   instance_type?: string;
   custom_config?: Record<string, any>;
+  user_id?: string;
 }
 
 export interface DeploymentResponse {
