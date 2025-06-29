@@ -82,16 +82,6 @@ class DeploymentService {
   }
 
   /**
-   * Check if user is authenticated
-   */
-  private isAuthenticated(): boolean {
-    // Check if user has a valid session/token
-    // This is a simple check - you might want to integrate with your auth system
-    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-    return !!token;
-  }
-
-  /**
    * Make direct fetch request to deployment service
    */
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -123,10 +113,6 @@ class DeploymentService {
    * Deploy a tool to GCP Cloud Run
    */
   async deployTool(request: DeploymentRequest): Promise<DeploymentResponse> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required. Please register or login to deploy tools.');
-    }
-
     try {
       const response = await this.makeRequest<DeploymentResponse>('/api/deploy', {
         method: 'POST',
@@ -143,10 +129,6 @@ class DeploymentService {
    * Get deployment status
    */
   async getDeploymentStatus(deploymentId: string): Promise<DeploymentStatus> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required.');
-    }
-
     try {
       const response = await this.makeRequest<DeploymentStatus>(`/api/deploy/${deploymentId}/status`);
       return response;
@@ -160,10 +142,6 @@ class DeploymentService {
    * Delete deployment to save costs
    */
   async deleteDeployment(deploymentId: string): Promise<{ status: string; message: string }> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required.');
-    }
-
     try {
       const response = await this.makeRequest<{ status: string; message: string }>(`/api/deploy/${deploymentId}`, {
         method: 'DELETE',
@@ -221,10 +199,6 @@ class DeploymentService {
    * Get deployment logs
    */
   async getDeploymentLogs(deploymentId: string): Promise<DeploymentLogs> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required.');
-    }
-
     try {
       const response = await this.makeRequest<DeploymentLogs>(`/api/deploy/${deploymentId}/logs`);
       return response;
@@ -238,10 +212,6 @@ class DeploymentService {
    * List user deployments
    */
   async listDeployments(userId?: string, limit: number = 20): Promise<DeploymentsList> {
-    if (!this.isAuthenticated()) {
-      throw new Error('Authentication required.');
-    }
-
     try {
       const params = new URLSearchParams();
       if (userId) params.append('user_id', userId);
