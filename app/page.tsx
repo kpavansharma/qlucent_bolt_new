@@ -556,7 +556,7 @@ export default function Home() {
               <div className="text-muted-foreground font-medium">Verified Vendors</div>
             </div>
             <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
-              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">1M+</div>
+              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">1K+</div>
               <div className="text-muted-foreground font-medium">Deployments</div>
             </div>
             <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
@@ -820,11 +820,11 @@ export default function Home() {
           {/* Stats */}
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-purple-600 mb-2">50K+</div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">5K+</div>
               <div className="text-muted-foreground">Active Users</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">1M+</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">1K+</div>
               <div className="text-muted-foreground">Tools Deployed</div>
             </div>
             <div>
