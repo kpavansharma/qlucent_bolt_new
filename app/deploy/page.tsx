@@ -118,6 +118,13 @@ export default function DeployPage() {
     checkServiceHealth();
   }, []);
 
+  // Load deployments when deployments tab is selected and user is authenticated
+  useEffect(() => {
+    if (activeTab === 'deployments' && user && !isLoadingDeployments) {
+      loadUserDeployments();
+    }
+  }, [activeTab, user]);
+
   // Check if user is authenticated using Supabase
   const checkAuthentication = async () => {
     setIsCheckingAuth(true);
@@ -181,7 +188,8 @@ export default function DeployPage() {
         environment: deploymentConfig.environment,
         region: deploymentConfig.region,
         instance_type: deploymentConfig.instance_type,
-        custom_config: deploymentConfig.custom_config
+        custom_config: deploymentConfig.custom_config,
+        user_id: user.id
       };
 
       const response = await deploymentService.deployTool(deploymentRequest);
@@ -189,6 +197,11 @@ export default function DeployPage() {
       
       // Start polling for status
       pollDeploymentStatus(response.deployment_id);
+      
+      // Refresh deployments list after successful deployment
+      setTimeout(() => {
+        loadUserDeployments();
+      }, 2000);
       
     } catch (error) {
       console.error('Deployment failed:', error);
@@ -694,13 +707,29 @@ export default function DeployPage() {
           <TabsContent value="deployments" className="mt-8">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Server className="w-5 h-5" />
-                  My Deployments
-                </CardTitle>
-                <CardDescription>
-                  Manage your active deployments
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Server className="w-5 h-5" />
+                      My Deployments
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your active deployments
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={loadUserDeployments}
+                    disabled={isLoadingDeployments}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {isLoadingDeployments ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Refresh'
+                    )}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoadingDeployments ? (
@@ -712,6 +741,13 @@ export default function DeployPage() {
                     <Server className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p>No deployments found</p>
                     <p className="text-sm">Start by deploying your first tool</p>
+                    <Button 
+                      onClick={loadUserDeployments}
+                      className="mt-4"
+                      variant="outline"
+                    >
+                      Refresh Deployments
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
