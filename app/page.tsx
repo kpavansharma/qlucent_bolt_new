@@ -125,6 +125,26 @@ const features = [
   }
 ];
 
+// Tech tools for the rotating globe
+const techTools = [
+  { name: 'Vue.js', url: 'https://vuejs.org', icon: '🟢' },
+  { name: 'Angular', url: 'https://angular.io', icon: '🔴' },
+  { name: 'React', url: 'https://reactjs.org', icon: '⚛️' },
+  { name: 'Next.js', url: 'https://nextjs.org', icon: '⚫' },
+  { name: 'Flutter', url: 'https://flutter.dev', icon: '🔵' },
+  { name: 'Docker', url: 'https://docker.com', icon: '🐳' },
+  { name: 'Git', url: 'https://git-scm.com', icon: '📝' },
+  { name: 'GitHub', url: 'https://github.com', icon: '🐙' },
+  { name: 'Terraform', url: 'https://www.terraform.io', icon: '🏗️' },
+  { name: 'Jenkins', url: 'https://www.jenkins.io', icon: '🔧' },
+  { name: 'Python', url: 'https://www.python.org', icon: '🐍' },
+  { name: 'JavaScript', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', icon: '💛' },
+  { name: 'TypeScript', url: 'https://www.typescriptlang.org', icon: '🔷' },
+  { name: 'npm', url: 'https://www.npmjs.com', icon: '📦' },
+  { name: 'Go', url: 'https://golang.org', icon: '🔵' },
+  { name: 'Kubernetes', url: 'https://kubernetes.io', icon: '☸️' }
+];
+
 const toolCategories = [
   {
     name: 'DevOps & Infrastructure',
@@ -681,6 +701,99 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* Rotating Tech Globe Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Powered by Leading Technologies
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Discover and deploy tools from the most popular frameworks and platforms in the developer ecosystem
+            </p>
+          </div>
+          
+          <div className="relative flex items-center justify-center min-h-[500px]">
+            {/* Central Globe */}
+            <div className="relative w-80 h-80 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 border-2 border-purple-200 dark:border-purple-700 shadow-2xl flex items-center justify-center">
+              <div className="w-64 h-64 rounded-full bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-800/20 dark:to-blue-800/20 border border-purple-100 dark:border-purple-600 flex items-center justify-center">
+                <Globe className="w-24 h-24 text-purple-600 dark:text-purple-400 animate-pulse" />
+              </div>
+              
+              {/* Rotating Tech Tools */}
+              {techTools.map((tool, index) => {
+                const angle = (index * 360) / techTools.length;
+                const radius = 200;
+                const x = Math.cos((angle * Math.PI) / 180) * radius;
+                const y = Math.sin((angle * Math.PI) / 180) * radius;
+                
+                return (
+                  <div
+                    key={tool.name}
+                    className="absolute w-16 h-16 rounded-full bg-background/90 dark:bg-background/80 backdrop-blur-sm border-2 border-purple-200 dark:border-purple-700 shadow-lg flex items-center justify-center group hover:scale-110 transition-all duration-300 cursor-pointer"
+                    style={{
+                      transform: `translate(${x}px, ${y}px)`,
+                      animation: `rotate 30s linear infinite`,
+                      animationDelay: `${index * 0.5}s`
+                    }}
+                    onClick={() => window.open(tool.url, '_blank')}
+                  >
+                    <div className="text-2xl group-hover:scale-125 transition-transform">
+                      {tool.icon}
+                    </div>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-background/95 dark:bg-background/90 backdrop-blur-sm border border-border rounded-lg px-3 py-1 text-sm font-medium text-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10 shadow-lg">
+                      {tool.name}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Orbital Rings */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-96 h-96 rounded-full border border-purple-200/30 dark:border-purple-700/30 animate-spin" style={{ animationDuration: '60s' }}></div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-[28rem] h-[28rem] rounded-full border border-blue-200/20 dark:border-blue-700/20 animate-spin" style={{ animationDuration: '45s', animationDirection: 'reverse' }}></div>
+            </div>
+          </div>
+          
+          {/* Tech Stats */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+              <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-2">16+</div>
+              <div className="text-muted-foreground font-medium">Popular Frameworks</div>
+            </div>
+            <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+              <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">100M+</div>
+              <div className="text-muted-foreground font-medium">Downloads</div>
+            </div>
+            <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+              <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">50K+</div>
+              <div className="text-muted-foreground font-medium">Active Projects</div>
+            </div>
+            <div className="bg-background/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border">
+              <div className="text-3xl md:text-4xl font-bold text-orange-600 mb-2">24/7</div>
+              <div className="text-muted-foreground font-medium">Support</div>
+            </div>
+          </div>
+        </div>
+        
+        <style jsx>{`
+          @keyframes rotate {
+            from {
+              transform: translate(var(--x), var(--y)) rotate(0deg);
+            }
+            to {
+              transform: translate(var(--x), var(--y)) rotate(360deg);
+            }
+          }
+        `}</style>
       </section>
 
       {/* Powerful Features */}
