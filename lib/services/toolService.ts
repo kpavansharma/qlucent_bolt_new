@@ -48,7 +48,7 @@ export const toolService = {
         }
         
         if (params.deploymentReady) {
-          backendParams.deployment_ready = params.deploymentReady;
+          backendParams.deployable = params.deploymentReady;
         }
         
         if (params.sortBy && params.sortBy !== 'relevance') {
@@ -98,20 +98,21 @@ export const toolService = {
         name: tool.name || 'Unknown Tool',
         description: tool.description || 'No description available',
         category: tool.category || 'Other',
-        stars: tool.stars || 0,
-        downloads: tool.downloads || '0',
-        license: tool.license || 'Unknown',
-        lastUpdated: tool.lastUpdated || new Date().toISOString(),
-        tags: tool.tags || [],
+        stars: tool.user_rating_count || 0,
+        downloads: tool.review_count ? `${tool.review_count}` : '0',
+        license: Array.isArray(tool.license) ? tool.license[0] : (tool.license || 'Unknown'),
+        lastUpdated: tool.last_updated || tool.created_at || new Date().toISOString(),
+        tags: Array.isArray(tool.tags) ? 
+          tool.tags.flatMap((tag: string) => tag.split(',').map((t: string) => t.trim())).filter((t: string) => t) : [],
         verified: tool.verified || false,
         aiScore: tool.aiScore || Math.floor(Math.random() * 40) + 60,
         compatibility: tool.compatibility || [],
-        deploymentReady: tool.deploymentReady || false,
-        website: tool.website,
-        github: tool.github,
+        deploymentReady: tool.deployable || false,
+        website: tool.tool_url || tool.website,
+        github: tool.tool_url || tool.github,
         documentation: tool.documentation,
         maintainers: tool.maintainers || [],
-        languages: tool.languages || [],
+        languages: tool.technology_stack || tool.languages || [],
         fileSize: tool.fileSize,
         versions: tool.versions || [],
         requirements: tool.requirements || {
@@ -120,7 +121,7 @@ export const toolService = {
           os: 'Linux, macOS, Windows'
         },
         features: tool.features || [],
-        useCases: tool.useCases || [],
+        useCases: tool.use_cases || tool.useCases || [],
         similarTools: tool.similarTools || [],
         pricing: tool.pricing || {
           personal: 'Free',
