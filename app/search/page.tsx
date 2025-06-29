@@ -81,11 +81,11 @@ export default function SearchPage() {
       e.preventDefault();
     }
     setCurrentPage(1);
+    setSelectedCategory('All'); // Clear category when performing a new search
     
     // Update URL with search parameters
     const params = new URLSearchParams();
     if (searchQuery) params.set('query', searchQuery);
-    if (selectedCategory !== 'All') params.set('category', selectedCategory);
     
     const newUrl = `/search${params.toString() ? '?' + params.toString() : ''}`;
     router.push(newUrl, { scroll: false });
