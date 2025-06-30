@@ -90,8 +90,8 @@ export default function ToolDetailPage() {
               </Button>
               <Separator orientation="vertical" className="h-6" />
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">{tool.name.charAt(0)}</span>
+                <div className="w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800 flex items-center justify-center">
+                  <span className="text-gray-600 dark:text-gray-300 font-bold text-sm">{tool.name.charAt(0)}</span>
                 </div>
                 <span className="text-xl font-bold text-gray-900">{tool.name}</span>
                 {tool.verified && (
