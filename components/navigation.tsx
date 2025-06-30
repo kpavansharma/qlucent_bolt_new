@@ -40,18 +40,19 @@ export function Navigation({ currentPage }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="relative w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="relative w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
               {!logoError ? (
                 <Image
                   src="/ql_logo.png"
                   alt="Qlucent.ai"
-                  width={24}
-                  height={24}
+                  width={32}
+                  height={32}
                   className="w-full h-full object-contain"
                   onError={() => setLogoError(true)}
+                  priority
                 />
               ) : (
-                <Zap className="w-5 h-5 text-white" />
+                <Zap className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               )}
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
