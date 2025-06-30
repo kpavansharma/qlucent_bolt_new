@@ -41,14 +41,14 @@ export default function PortfoliosPage() {
   const portfolios = portfoliosResponse?.items || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+                <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
@@ -56,16 +56,16 @@ export default function PortfoliosPage() {
             </Link>
             
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/search" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors">
                 Discover
               </Link>
-              <Link href="/bundles" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/bundles" className="text-muted-foreground hover:text-foreground transition-colors">
                 Bundles
               </Link>
-              <Link href="/vendors" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/vendors" className="text-muted-foreground hover:text-foreground transition-colors">
                 Vendors
               </Link>
-              <Link href="/deploy" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/deploy" className="text-muted-foreground hover:text-foreground transition-colors">
                 Deploy
               </Link>
               <Link href="/portfolios" className="text-purple-600 font-medium">
@@ -77,12 +77,12 @@ export default function PortfoliosPage() {
       </div>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-purple-50 to-blue-50 py-12">
+      <section className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             Developer Portfolios
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Discover talented developers, explore their tool expertise, and learn from their experiences. 
             Connect with the community and find inspiration for your next project.
           </p>
