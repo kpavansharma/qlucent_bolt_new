@@ -94,7 +94,10 @@ export default function DeployPage() {
     environment: 'production',
     region: 'us-central1',
     instance_type: 'small',
-    custom_config: {}
+    custom_config: {},
+    gcp_project_id: '',  // User's GCP project
+    gcp_credentials: '',  // User's service account key
+    use_own_gcp: false   // Toggle for using own GCP
   });
   
   // Authentication state
@@ -180,6 +183,18 @@ export default function DeployPage() {
       return;
     }
 
+    // Validate GCP configuration if user wants to use their own project
+    if (deploymentConfig.use_own_gcp) {
+      if (!deploymentConfig.gcp_project_id.trim()) {
+        alert('Please enter your GCP Project ID');
+        return;
+      }
+      if (!deploymentConfig.gcp_credentials.trim()) {
+        alert('Please provide your service account key');
+        return;
+      }
+    }
+
     setIsDeploying(true);
     try {
       const deploymentRequest: DeploymentRequest = {
@@ -189,7 +204,9 @@ export default function DeployPage() {
         region: deploymentConfig.region,
         instance_type: deploymentConfig.instance_type,
         custom_config: deploymentConfig.custom_config,
-        user_id: user.id
+        user_id: user.id,
+        gcp_project_id: deploymentConfig.use_own_gcp ? deploymentConfig.gcp_project_id : undefined,
+        gcp_credentials: deploymentConfig.use_own_gcp ? deploymentConfig.gcp_credentials : undefined
       };
 
       const response = await deploymentService.deployTool(deploymentRequest);
@@ -583,6 +600,80 @@ export default function DeployPage() {
                           </SelectContent>
                         </Select>
                       </div>
+                    </div>
+
+                    {/* GCP Configuration Section */}
+                    <div className="border-t pt-6 mt-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <input
+                          type="checkbox"
+                          id="useOwnGcp"
+                          checked={deploymentConfig.use_own_gcp}
+                          onChange={(e) => setDeploymentConfig(prev => ({ 
+                            ...prev, 
+                            use_own_gcp: e.target.checked 
+                          }))}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor="useOwnGcp" className="font-medium">
+                          Deploy to my own GCP project
+                        </Label>
+                      </div>
+                      
+                      {deploymentConfig.use_own_gcp && (
+                        <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+                          <div>
+                            <Label htmlFor="gcpProjectId">GCP Project ID</Label>
+                            <Input 
+                              id="gcpProjectId" 
+                              placeholder="your-gcp-project-id"
+                              value={deploymentConfig.gcp_project_id}
+                              onChange={(e) => setDeploymentConfig(prev => ({ 
+                                ...prev, 
+                                gcp_project_id: e.target.value 
+                              }))}
+                            />
+                            <p className="text-sm text-gray-600 mt-1">
+                              Your Google Cloud project ID where resources will be deployed
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="gcpCredentials">Service Account Key (JSON)</Label>
+                            <Textarea 
+                              id="gcpCredentials" 
+                              placeholder="Paste your service account JSON key here..."
+                              value={deploymentConfig.gcp_credentials}
+                              onChange={(e) => setDeploymentConfig(prev => ({ 
+                                ...prev, 
+                                gcp_credentials: e.target.value 
+                              }))}
+                              rows={4}
+                            />
+                            <p className="text-sm text-gray-600 mt-1">
+                              Your service account key with Cloud Run and Storage permissions
+                            </p>
+                          </div>
+                          
+                          <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                            <h4 className="font-medium text-blue-900 mb-2">Required Permissions</h4>
+                            <ul className="text-sm text-blue-800 space-y-1">
+                              <li>• Cloud Run Admin (roles/run.admin)</li>
+                              <li>• Storage Admin (roles/storage.admin)</li>
+                              <li>• Service Account User (roles/iam.serviceAccountUser)</li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!deploymentConfig.use_own_gcp && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600">
+                            <strong>Default:</strong> Deployments will use Qlucent's GCP infrastructure 
+                            (managed by us, no additional setup required)
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
