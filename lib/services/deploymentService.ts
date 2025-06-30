@@ -8,6 +8,8 @@ export interface DeploymentRequest {
   instance_type?: string;
   custom_config?: Record<string, any>;
   user_id?: string;
+  gcp_project_id?: string;  // User's own GCP project
+  gcp_credentials?: string;  // Base64 encoded service account key
 }
 
 export interface DeploymentResponse {
