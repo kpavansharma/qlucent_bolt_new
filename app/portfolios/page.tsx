@@ -13,6 +13,7 @@ import { portfolioService, PortfolioSearchParams } from '@/lib/services/portfoli
 import { Portfolio } from '@/lib/types/api';
 import { useApi } from '@/lib/hooks/useApi';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const categories = ['All', 'Frontend', 'Backend', 'DevOps', 'Data Science', 'AI/ML', 'Security', 'Mobile'];
 const sortOptions = ['Most Active', 'Highest Rated', 'Most Downloads', 'Recently Joined'];
@@ -46,9 +47,16 @@ export default function PortfoliosPage() {
       <div className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                <User className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <Image
+                  src="/ql_logo.png"
+                  alt="Qlucent.ai"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                  priority
+                />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Qlucent.ai
