@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Navigation } from '@/components/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -231,7 +232,7 @@ const companyLogos = [
     name: 'Amazon',
     logo: (
       <svg viewBox="0 0 24 24" className="w-8 h-8">
-        <path fill="#FF9900" d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726-1.548.41-3.156.615-4.83.615-3.42 0-6.673-.633-9.755-1.902-.244-.1-.432-.21-.563-.328-.13-.116-.18-.226-.15-.328.03-.1.09-.18.18-.24.09-.06.18-.09.27-.09.09 0 .18.03.27.09z"/>
+        <path fill="#FF9900" d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.525.13.12.174.09.336-.12.48-.256.19-.6.41-1.006.654-1.244.743-2.64 1.316-4.185 1.726-1.548.41-3.156.615-4.83.615-3.42 0-6.673-.633-9.755-1.902-.244-.1-.432-.21-.563-.328-.13-.116-.18-.226-.15-.328.03-.1.09-.18.18-.24.09-.06.18-.09.27-.09.09 0 .18.03.27.09.36.12.6.36.84.6.24.24.44.52.6.84.16.32.28.66.36 1.02.08.36-.12.7-.12 1.02s.04-.66.12-1.02c.08-.36.2-.7.36-1.02.16-.32.36-.6.6-.84.24-.24.52-.44.84-.6.32-.16.66-.28 1.02-.36.36-.08.7-.12 1.02-.12s.66.04 1.02.12c.36.08.7.2 1.02.36.32.16.6.36.84.6.24.24.44.52.6.84.16.32.28.66.36 1.02.08.36.12.7.12 1.02s-.04.66-.12 1.02c-.08.36-.2.7-.36 1.02-.16.32-.36.6-.6.84-.24.24-.52.44-.84.6-.32.16-.66.28-1.02.36-.36.08-.7.12-1.02.12z"/>
         <path fill="#146EB4" d="M20.996 15.673c-.32 0-.66-.04-1.02-.12-.36-.08-.7-.2-1.02-.36-.32-.16-.6-.36-.84-.6-.24-.24-.44-.52-.6-.84-.16-.32-.28-.66-.36-1.02-.08-.36-.12-.7-.12-1.02s.04-.66.12-1.02c.08-.36.2-.7.36-1.02.16-.32.36-.6.6-.84.24-.24.52-.44.84-.6.32-.16.66-.28 1.02-.36.36-.08.7-.12 1.02-.12s.66.04 1.02.12c.36.08.7.2 1.02.36.32.16.6.36.84.6.24.24.44.52.6.84.16.32.28.66.36 1.02.08.36.12.7.12 1.02s-.04.66-.12 1.02c-.08.36-.2.7-.36 1.02-.16.32-.36.6-.6.84-.24.24-.52.44-.84.6-.32.16-.66.28-1.02.36-.36.08-.7.12-1.02.12z"/>
       </svg>
     )
@@ -356,137 +357,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="relative w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                <Image
-                  src="/ql_logo.png"
-                  alt="Qlucent.ai"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Qlucent.ai
-              </span>
-            </Link>
-            
-            <div className="hidden md:flex items-center justify-center flex-1 space-x-8">
-              <Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors">
-                Discover
-              </Link>
-              <Link href="/bundles" className="text-muted-foreground hover:text-foreground transition-colors">
-                Bundles
-              </Link>
-              <Link href="/vendors" className="text-muted-foreground hover:text-foreground transition-colors">
-                Vendors
-              </Link>
-              <Link href="/deploy" className="text-muted-foreground hover:text-foreground transition-colors">
-                Deploy
-              </Link>
-              <Link href="/portfolios" className="text-muted-foreground hover:text-foreground transition-colors">
-                Portfolios
-              </Link>
-            </div>
-            
-            <div className="hidden md:flex items-center space-x-4">
-              <ThemeToggle />
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  <Link href="/dashboard">
-                    <Button variant="outline" size="sm">
-                      <User className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button variant="outline" size="sm" onClick={handleSignOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Link href="/auth">
-                    <Button variant="outline" size="sm">Sign In</Button>
-                  </Link>
-                  <Link href="/auth">
-                    <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-
-            <div className="md:hidden flex items-center space-x-2">
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
-            </div>
-          </div>
-          
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t">
-              <div className="flex flex-col space-y-4">
-                <Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Discover
-                </Link>
-                <Link href="/bundles" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Bundles
-                </Link>
-                <Link href="/vendors" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Vendors
-                </Link>
-                <Link href="/deploy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Deploy
-                </Link>
-                <Link href="/portfolios" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Portfolios
-                </Link>
-                <div className="flex flex-col space-y-2 pt-4">
-                  {user ? (
-                    <>
-                      <Link href="/dashboard">
-                        <Button variant="outline" size="sm" className="w-full">
-                          <User className="w-4 h-4 mr-2" />
-                          Dashboard
-                        </Button>
-                      </Link>
-                      <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link href="/auth">
-                        <Button variant="outline" size="sm" className="w-full">Sign In</Button>
-                      </Link>
-                      <Link href="/auth">
-                        <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 w-full">
-                          Get Started
-                        </Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
+      <Navigation />
+      
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-blue-50/50 dark:from-purple-950/20 dark:to-blue-950/20"></div>
@@ -928,12 +800,12 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-6">
-                <div className="relative w-8 h-8 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+                <div className="relative w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
                   <Image
                     src="/ql_logo.png"
                     alt="Qlucent.ai"
-                    width={24}
-                    height={24}
+                    width={32}
+                    height={32}
                     className="w-full h-full object-contain"
                   />
                 </div>
