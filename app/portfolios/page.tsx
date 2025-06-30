@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { portfolioService, PortfolioSearchParams } from '@/lib/services/portfolioService';
 import { Portfolio } from '@/lib/types/api';
 import { useApi } from '@/lib/hooks/useApi';
+import { Navigation } from '@/components/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -43,46 +44,7 @@ export default function PortfoliosPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                <Image
-                  src="/ql_logo.png"
-                  alt="Qlucent.ai"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Qlucent.ai
-              </span>
-            </Link>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/search" className="text-muted-foreground hover:text-foreground transition-colors">
-                Discover
-              </Link>
-              <Link href="/bundles" className="text-muted-foreground hover:text-foreground transition-colors">
-                Bundles
-              </Link>
-              <Link href="/vendors" className="text-muted-foreground hover:text-foreground transition-colors">
-                Vendors
-              </Link>
-              <Link href="/deploy" className="text-muted-foreground hover:text-foreground transition-colors">
-                Deploy
-              </Link>
-              <Link href="/portfolios" className="text-purple-600 font-medium">
-                Portfolios
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <Navigation currentPage="portfolios" />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 py-12">
