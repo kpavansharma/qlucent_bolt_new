@@ -374,11 +374,11 @@ export default function DeployPage() {
       <Navigation currentPage="deploy" />
 
       {/* Service Health Status */}
-      <div className="bg-white border-b">
+      <div className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Deployment Service:</span>
+              <span className="text-sm font-medium text-muted-foreground">Deployment Service:</span>
               {isCheckingHealth ? (
                 <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
               ) : serviceHealth ? (
